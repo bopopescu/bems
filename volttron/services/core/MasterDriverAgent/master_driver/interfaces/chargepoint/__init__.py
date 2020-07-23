@@ -61,7 +61,7 @@ import sys
 import service as cps
 import async_service as async
 
-from master_driver.interfaces import BaseInterface, BaseRegister, BasicRevert, DriverInterfaceError
+from main_driver.interfaces import BaseInterface, BaseRegister, BasicRevert, DriverInterfaceError
 from suds.sudsobject import asdict
 
 _log = logging.getLogger(__name__)
@@ -192,7 +192,7 @@ class ChargepointRegister(BaseRegister):
             return None
 
 
-#   For all sub-classes of ChargepointRegister, they have an attribute_list and a writeable_list. These are master lists
+#   For all sub-classes of ChargepointRegister, they have an attribute_list and a writeable_list. These are main lists
 #   to validate all CSV register configs. Any given subclass of ChargepointRegister may only have attributes listed
 #   in their corresponding attriute list, and similarly, only those attributes included in the writeable list are
 #   permitted to have read/write access. Of Note: Most ChargepointRegister subclasses do not have any writeable

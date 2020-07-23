@@ -210,7 +210,7 @@ class FailoverAgent(Agent):
 
         primary_is_up, vc_is_up = current_state
         if not primary_is_up and vc_is_up:
-            pass # verify and start master
+            pass # verify and start main
         else:
             self._agent_control('stop_agent')
 

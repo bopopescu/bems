@@ -76,7 +76,7 @@ DEBUGGER_CONFIG = {
 
 @pytest.fixture(scope='module')
 def agent(request, volttron_instance_msgdebug):
-    master_uuid = volttron_instance_msgdebug.install_agent(agent_dir=get_services_core("MessageDebuggerAgent"),
+    main_uuid = volttron_instance_msgdebug.install_agent(agent_dir=get_services_core("MessageDebuggerAgent"),
                                                            config_file=DEBUGGER_CONFIG,
                                                            start=True)
     gevent.sleep(2)
@@ -84,7 +84,7 @@ def agent(request, volttron_instance_msgdebug):
     gevent.sleep(20)  # wait for the agent to start
 
     def stop():
-        volttron_instance_msgdebug.stop_agent(master_uuid)
+        volttron_instance_msgdebug.stop_agent(main_uuid)
         msg_debugger_agent.core.stop()
 
     request.addfinalizer(stop)

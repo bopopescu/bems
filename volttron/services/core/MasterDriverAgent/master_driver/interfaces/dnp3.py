@@ -100,12 +100,12 @@ class Interface(BasicRevert, BaseInterface):
 
         This driver gets, and sends, DNP3 device data by issuing RPC calls to DNP3Agent,
         (see its source code in services/core/DNP3Agent), which communicates with the
-        DNP3 master via a web interface.
+        DNP3 main via a web interface.
 
         Test drivers for the DNP3 interface can be configured as follows:
 
         export VOLTTRON_ROOT=<your VOLTTRON install directory>
-        export DRIVER_ROOT=$VOLTTRON_ROOT/services/core/MasterDriverAgent
+        export DRIVER_ROOT=$VOLTTRON_ROOT/services/core/MainDriverAgent
         cd $VOLTTRON_ROOT
         volttron-ctl config store platform.driver dnp3.csv $DRIVER_ROOT/example_configurations/dnp3.csv --csv
         volttron-ctl config store platform.driver devices/dnp3 $DRIVER_ROOT/example_configurations/test_dnp3.config

@@ -364,7 +364,7 @@ class DriverAgent(BasicAgent):
         self.interface.revert_all(**kwargs)
 
     def publish_cov_value(self, point_name, point_values):
-        """Called in the master driver agent to publish a cov from a point"""
+        """Called in the main driver agent to publish a cov from a point"""
         utcnow = utils.get_aware_utc_now()
         utcnow_string = utils.format_timestamp(utcnow)
         headers = {

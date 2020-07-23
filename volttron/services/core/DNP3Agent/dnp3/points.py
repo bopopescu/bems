@@ -292,7 +292,7 @@ class PointDefinitions(object):
 
     def point_value_for_command(self, command_type, command, index, op_type):
         """
-            A DNP3 Select or Operate was received from the master. Create and return a PointValue for its data.
+            A DNP3 Select or Operate was received from the main. Create and return a PointValue for its data.
 
         :param command_type: Either 'Select' or 'Operate'.
         :param command: A ControlRelayOutputBlock or else a wrapped data value (AnalogOutputInt16, etc.).
@@ -535,7 +535,7 @@ class BasePointDefinition(object):
 
     @property
     def is_output(self):
-        """Return True if the PointDefinition is a Binary or Analog output point (i.e., sent by the Master)."""
+        """Return True if the PointDefinition is a Binary or Analog output point (i.e., sent by the Main)."""
         return self.point_type in [POINT_TYPE_ANALOG_OUTPUT, POINT_TYPE_BINARY_OUTPUT]
 
     @property

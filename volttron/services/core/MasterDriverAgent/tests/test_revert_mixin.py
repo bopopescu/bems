@@ -36,7 +36,7 @@
 # under Contract DE-AC05-76RL01830
 # }}}
 
-from master_driver.interfaces.fakedriver import Interface
+from main_driver.interfaces.fakedriver import Interface
 import pytest
 from volttron.platform.store import process_raw_config
 

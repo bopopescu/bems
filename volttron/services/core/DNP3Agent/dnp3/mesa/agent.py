@@ -56,7 +56,7 @@ class MesaAgent(BaseDNP3Agent):
     """
         MesaAgent is a VOLTTRON agent that handles MESA-ESS DNP3 outstation communications.
 
-        MesaAgent models a DNP3 outstation, communicating with a DNP3 master.
+        MesaAgent models a DNP3 outstation, communicating with a DNP3 main.
 
         For further information about this agent, MESA-ESS, and DNP3 communications, please
         see the VOLTTRON MESA-ESS agent specification, which can be found in VOLTTRON readthedocs
@@ -128,7 +128,7 @@ class MesaAgent(BaseDNP3Agent):
 
     @Core.receiver('onstart')
     def onstart(self, sender, **kwargs):
-        """Start the DNP3Outstation instance, kicking off communication with the DNP3 Master."""
+        """Start the DNP3Outstation instance, kicking off communication with the DNP3 Main."""
         self._configure_parameters(self.default_config)
         _log.info('Starting DNP3Outstation')
         self.publish_outstation_status('starting')
@@ -163,7 +163,7 @@ class MesaAgent(BaseDNP3Agent):
 
     def _process_point_value(self, point_value):
         """
-            A PointValue was received from the Master. Process its payload.
+            A PointValue was received from the Main. Process its payload.
 
         :param point_value: A PointValue.
         """
@@ -213,7 +213,7 @@ class MesaAgent(BaseDNP3Agent):
 
     def update_input_point(self, point_def, value):
         """
-            Update an input point. This may send its PointValue to the Master.
+            Update an input point. This may send its PointValue to the Main.
 
         :param point_def: A PointDefinition.
         :param value: A value to send (unwrapped simple data type, or else a list/array).
@@ -241,7 +241,7 @@ class MesaAgent(BaseDNP3Agent):
         return func
 
     def publish_function_step(self, step_to_send):
-        """A Function Step was received from the DNP3 Master. Publish the Function."""
+        """A Function Step was received from the DNP3 Main. Publish the Function."""
         function_to_send = step_to_send.function
         msg = {
             "function_name": function_to_send.definition.name,

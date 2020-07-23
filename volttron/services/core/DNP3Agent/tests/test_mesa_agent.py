@@ -34,7 +34,7 @@ import pytest
 import yaml
 
 from dnp3.points import PointDefinitions
-from mesa_master_test import MesaMasterTest
+from mesa_main_test import MesaMainTest
 from volttron.platform import get_services_core
 from volttron.platform.agent.utils import strip_comments
 
@@ -134,18 +134,18 @@ def agent(request, volttron_instance):
 
 
 @pytest.fixture(scope="module")
-def run_master(request):
-    """Run Mesa master application."""
-    master = MesaMasterTest(local_ip=MESA_AGENT_CONFIG['local_ip'],
+def run_main(request):
+    """Run Mesa main application."""
+    main = MesaMainTest(local_ip=MESA_AGENT_CONFIG['local_ip'],
                             port=MESA_AGENT_CONFIG['port'])
-    master.connect()
+    main.connect()
 
     def stop():
-        master.shutdown()
+        main.shutdown()
 
     request.addfinalizer(stop)
 
-    return master
+    return main
 
 
 @pytest.fixture(scope="function")
@@ -178,7 +178,7 @@ class TestMesaAgent:
     def set_point(agent, point_name, value):
         """Use DNP3Agent to set a point value for a DNP3 resource."""
         response = agent.vip.rpc.call(MESA_AGENT_ID, 'set_point', point_name, value).get(timeout=10)
-        gevent.sleep(1)     # Give the Master time to receive an echoed point value back from the Outstation.
+        gevent.sleep(1)     # Give the Main time to receive an echoed point value back from the Outstation.
         return response
 
     @staticmethod
@@ -198,15 +198,15 @@ class TestMesaAgent:
         return json.load(open(send_json))
 
     @staticmethod
-    def send_points(master, send_json, send_in_step_order=True):
-        """Master loads points from json and send them to mesa agent.
+    def send_points(main, send_json, send_in_step_order=True):
+        """Main loads points from json and send them to mesa agent.
         Return empty dictionary if function sent successfully, the dictionary with key and error otherwise."""
         exceptions = {}
         try:
             if send_in_step_order:
-                master.send_function_test(func_test_json=send_json)
+                main.send_function_test(func_test_json=send_json)
             else:
-                master.send_json(pdefs, FUNCTION_DEFINITIONS_PATH, send_json=send_json)
+                main.send_json(pdefs, FUNCTION_DEFINITIONS_PATH, send_json=send_json)
         except Exception as err:
             print("{}: {}".format(type(err).__name__, str(err)))
             exceptions['key'] = type(err).__name__
@@ -215,20 +215,20 @@ class TestMesaAgent:
         return exceptions
 
     @staticmethod
-    def get_value_from_master(master, point_name):
-        """Get value of the point from master after being set by test agent."""
+    def get_value_from_main(main, point_name):
+        """Get value of the point from main after being set by test agent."""
         try:
             pdef = pdefs.point_named(point_name)
             group = input_group_map[pdef.group]
             index = pdef.index
-            return master.soe_handler.result[group][index]
+            return main.soe_handler.result[group][index]
         except KeyError:
             return None
 
-    def send_function_and_confirm(self, master, agent, json_file):
-        """Test get points to confirm if points is set correctly by master."""
+    def send_function_and_confirm(self, main, agent, json_file):
+        """Test get points to confirm if points is set correctly by main."""
         send_function = self.convert_json_file_to_dict(json_file)
-        exceptions = self.send_points(master, send_function)
+        exceptions = self.send_points(main, send_function)
 
         for point_name in send_function.keys():
             if point_name not in ["name", "function_id", "function_name"]:
@@ -257,33 +257,33 @@ class TestMesaAgent:
         assert exceptions == {}
 
     # **********
-    # ********** OUTPUT TESTS (send data from Master to Agent to ControlAgent) ************
+    # ********** OUTPUT TESTS (send data from Main to Agent to ControlAgent) ************
     # **********
 
-    def test_simple_function(self, run_master, agent, reset):
+    def test_simple_function(self, run_main, agent, reset):
         """Test a simple function (not array or selector block)."""
 
         # Set the function support point to True
         self.set_point(agent, 'Supports Charge/Discharge Mode', True)
 
-        self.send_function_and_confirm(run_master, agent, 'charge_discharge.json')
+        self.send_function_and_confirm(run_main, agent, 'charge_discharge.json')
 
-    def test_array(self, run_master, agent, reset):
+    def test_array(self, run_main, agent, reset):
         """Test array function."""
-        self.send_function_and_confirm(run_master, agent, 'curve.json')
-        self.send_function_and_confirm(run_master, agent, 'inverter.json')
+        self.send_function_and_confirm(run_main, agent, 'curve.json')
+        self.send_function_and_confirm(run_main, agent, 'inverter.json')
 
-    def test_selector_blocks(self, run_master, agent, reset):
+    def test_selector_blocks(self, run_main, agent, reset):
         """Test selector block functions."""
         assert self.get_selector_block(agent, 'Curve Edit Selector', 2) == {}
         assert self.get_selector_block(agent, 'Curve Edit Selector', 5) == {}
 
         send_function_1 = self.convert_json_file_to_dict('selector_block_1.json')
-        exceptions_1 = self.send_points(run_master, send_function_1)
+        exceptions_1 = self.send_points(run_main, send_function_1)
         assert exceptions_1 == {}
 
         send_function_2 = self.convert_json_file_to_dict('selector_block_2.json')
-        exceptions_2 = self.send_points(run_master, send_function_2)
+        exceptions_2 = self.send_points(run_main, send_function_2)
         assert exceptions_2 == {}
 
         get_selector_block_1 = self.get_selector_block(agent, 'Curve Edit Selector', 2)
@@ -292,7 +292,7 @@ class TestMesaAgent:
         dict_compare(get_selector_block_2, send_function_2)
         assert get_selector_block_1 != get_selector_block_2
 
-    def test_invalid_function(self, run_master, agent, reset):
+    def test_invalid_function(self, run_main, agent, reset):
         """Test send an invalid function, confirm getting exception error."""
         send_function = {
             "name": "function_test_name",
@@ -302,13 +302,13 @@ class TestMesaAgent:
             "point_2": 2
         }
 
-        exceptions = self.send_points(run_master, send_function)
+        exceptions = self.send_points(run_main, send_function)
         assert exceptions == {
             'key': 'FunctionTestException',
             'error': 'Validation Error: Function definition not found: Invalid Function'
         }
 
-    def test_invalid_point_value(self, run_master, agent, reset):
+    def test_invalid_point_value(self, run_main, agent, reset):
         """Test send a function with an invalid data type for a point, confirm getting exception error."""
         # Set the function support point to True
         self.set_point(agent, "Supports Charge/Discharge Mode", True)
@@ -318,7 +318,7 @@ class TestMesaAgent:
         # Change the analog value to binary
         send_function['DCHD.WinTms (out)'] = True
 
-        exceptions = self.send_points(run_master, send_function)
+        exceptions = self.send_points(run_main, send_function)
         assert exceptions == {
             'key': 'FunctionTestException',
             'error': 'Validation Error: Invalid point value: DCHD.WinTms (out)'
@@ -330,13 +330,13 @@ class TestMesaAgent:
         # Change the binary value to analog
         send_function['DCHD.ModEna'] = 1
 
-        exceptions = self.send_points(run_master, send_function)
+        exceptions = self.send_points(run_main, send_function)
         assert exceptions == {
             'key': 'FunctionTestException',
             'error': 'Validation Error: Invalid point value: DCHD.ModEna'
         }
 
-    def test_invalid_array_value(self, run_master, agent, reset):
+    def test_invalid_array_value(self, run_main, agent, reset):
         """Test send a function with an invalid data type for a point, confirm getting exception error."""
         send_function = self.convert_json_file_to_dict('curve.json')
 
@@ -350,13 +350,13 @@ class TestMesaAgent:
              "Curve-Y": 500}
         ]
 
-        exceptions = self.send_points(run_master, send_function)
+        exceptions = self.send_points(run_main, send_function)
         assert exceptions == {
             'key': 'FunctionTestException',
             'error': 'Validation Error: Invalid point value: CurveStart-X'
         }
 
-    def test_missing_mandatory_step(self, run_master, agent, reset):
+    def test_missing_mandatory_step(self, run_main, agent, reset):
         """Test send a function missing its mandatory step, confirm getting exception error."""
 
         # Set the function support point to True
@@ -367,14 +367,14 @@ class TestMesaAgent:
         # Remove mandatory step
         del send_function['DCHD.RmpTms (out)']
 
-        exceptions = self.send_points(run_master, send_function)
+        exceptions = self.send_points(run_main, send_function)
 
         assert exceptions == {
             'key': 'FunctionTestException',
             'error': 'Validation Error: Function Test missing mandatory steps'
         }
 
-    def test_missing_point_definition(self, run_master, agent, reset):
+    def test_missing_point_definition(self, run_main, agent, reset):
         """Test send a function with a point not defined in point definitions, confirm getting exception error."""
 
         # Set the function support point to True
@@ -385,21 +385,21 @@ class TestMesaAgent:
         # Add a point for testing
         send_function['test point'] = 5
 
-        exceptions = self.send_points(run_master, send_function)
+        exceptions = self.send_points(run_main, send_function)
 
         assert exceptions == {
             'key': 'FunctionTestException',
             'error': 'Validation Error: Not all points resolve'
         }
 
-    def test_missing_support_point(self, run_master, agent, reset):
+    def test_missing_support_point(self, run_main, agent, reset):
         """Test send a function missing its support point, confirm getting exception error."""
 
         # Set the function support point to True
         self.set_point(agent, "Supports Charge/Discharge Mode", False)
 
         send_function = self.convert_json_file_to_dict('charge_discharge.json')
-        exceptions = self.send_points(run_master, send_function)
+        exceptions = self.send_points(run_main, send_function)
 
         for point_name in send_function.keys():
             if point_name not in ["name", "function_id", "function_name"]:
@@ -410,7 +410,7 @@ class TestMesaAgent:
         assert messages == {}
         assert exceptions == {}
 
-    def test_wrong_step_order(self, run_master, agent, reset):
+    def test_wrong_step_order(self, run_main, agent, reset):
         """Test send a function in wrong step order, confirm getting exception error."""
 
         # Set the function support point to True
@@ -433,21 +433,21 @@ class TestMesaAgent:
             "DCHD.ModEna": True
         }
 
-        exceptions = self.send_points(run_master, charge_discharge_dict, send_in_step_order=False)
+        exceptions = self.send_points(run_main, charge_discharge_dict, send_in_step_order=False)
 
         assert exceptions == {
-            'key': 'MesaMasterTestException',
+            'key': 'MesaMainTestException',
             'error': 'Step not in order: 1'
         }
 
     # **********
-    # ********** INPUT TESTS (send data from ControlAgent to Agent to Master) ************
+    # ********** INPUT TESTS (send data from ControlAgent to Agent to Main) ************
     # **********
 
-    def test_set_point(self, run_master, agent, reset):
+    def test_set_point(self, run_main, agent, reset):
         """Test set an input point and confirm getting the same value for that point."""
         self.set_point(agent, TEST_SET_POINT_NAME, 45)
-        received_val = self.get_value_from_master(run_master, TEST_SET_POINT_NAME)
+        received_val = self.get_value_from_main(run_main, TEST_SET_POINT_NAME)
         assert received_val == 45, "Expected {} = {}, got {}".format(TEST_SET_POINT_NAME, 45, received_val)
 
     def test_set_invalid_point(self, agent, reset):
@@ -467,7 +467,7 @@ class TestMesaAgent:
             assert str(err) == "dnp3.points.DNP3Exception(\"Received <type 'bool'> value for PointDefinition " \
                                "DCHD.WinTms (in) (30.1, index=91, type=Analog Input).\")"
 
-    def test_set_points(self, run_master, agent, reset):
+    def test_set_points(self, run_main, agent, reset):
         """Test set a set of points and confirm getting the correct values for all point that are set."""
 
         set_points_dict = {
@@ -487,9 +487,9 @@ class TestMesaAgent:
         self.set_points(agent, set_points_dict)
 
         for point_name in set_points_dict.keys():
-            assert self.get_value_from_master(run_master, point_name) == set_points_dict[point_name]
+            assert self.get_value_from_main(run_main, point_name) == set_points_dict[point_name]
 
-    def test_set_points_array(self, run_master, agent, reset):
+    def test_set_points_array(self, run_main, agent, reset):
         """Test set a set of points of an array and confirm getting the correct values for all point that are set."""
 
         self.set_points(agent, {
@@ -506,14 +506,14 @@ class TestMesaAgent:
         pdef = pdefs.point_named("CurveStart-X (in)")
         group = input_group_map[pdef.group]
 
-        assert run_master.soe_handler.result[group][500] == 1.0
-        assert run_master.soe_handler.result[group][501] == 2.0
-        assert run_master.soe_handler.result[group][502] == 3.0
-        assert run_master.soe_handler.result[group][503] == 4.0
-        assert run_master.soe_handler.result[group][504] == 5.0
-        assert run_master.soe_handler.result[group][505] == 6.0
+        assert run_main.soe_handler.result[group][500] == 1.0
+        assert run_main.soe_handler.result[group][501] == 2.0
+        assert run_main.soe_handler.result[group][502] == 3.0
+        assert run_main.soe_handler.result[group][503] == 4.0
+        assert run_main.soe_handler.result[group][504] == 5.0
+        assert run_main.soe_handler.result[group][505] == 6.0
 
-    def test_wrong_database_size(self, run_master, agent, reset):
+    def test_wrong_database_size(self, run_main, agent, reset):
         """Test set point for an index out of database size range, confirm receiving None for that point."""
 
         try:

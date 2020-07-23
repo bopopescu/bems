@@ -168,7 +168,7 @@ driverName,driverName,ChargingSessionRegister,1,string,,,FALSE,"""
 @pytest.fixture(scope='module')
 def agent(request, volttron_instance1):
     md_agent = volttron_instance1.build_agent()
-    # Clean out master driver configurations.
+    # Clean out main driver configurations.
     md_agent.vip.rpc.call('config.store',
                           'manage_delete_store',
                           'platform.driver').get(timeout=10)
@@ -199,14 +199,14 @@ def agent(request, volttron_instance1):
                           REGISTRY_CONFIG_STRING,
                           'csv').get(timeout=10)
 
-    master_uuid = volttron_instance1.install_agent(agent_dir=get_services_core("MasterDriverAgent"),
+    main_uuid = volttron_instance1.install_agent(agent_dir=get_services_core("MainDriverAgent"),
                                                    config_file={},
                                                    start=True)
-    print('agent id: ', master_uuid)
+    print('agent id: ', main_uuid)
     gevent.sleep(10)  # wait for the agent to start and start the devices
 
     def stop():
-        volttron_instance1.stop_agent(master_uuid)
+        volttron_instance1.stop_agent(main_uuid)
         md_agent.core.stop()
 
     request.addfinalizer(stop)

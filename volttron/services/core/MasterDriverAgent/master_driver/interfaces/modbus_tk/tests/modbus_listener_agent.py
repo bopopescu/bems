@@ -121,7 +121,7 @@ class ListenerAgent(Agent):
         update_val = self.test('fake-campus/fake-building/fake-device', 'Count')
         print(update_val)
 
-        # Define the modbus_test driver for master_driver agent, do set point for all registers
+        # Define the modbus_test driver for main_driver agent, do set point for all registers
         self.set_point('modbus_test', 'BigUShort', 1234)
         self.set_point('modbus_test', 'BigUInt', 141141)
         self.set_point('modbus_test', 'BigULong', 9999999)
@@ -138,11 +138,11 @@ class ListenerAgent(Agent):
         self.set_point('modbus_test', 'LittleLong', -898989)
         print ('MODBUS TEST', self.scrape_all('modbus_test'))
 
-        # Define watts_on_1 (slave id 1) and watts_on_2 (slave id 2) for master_driver agent, do scrape_all
+        # Define watts_on_1 (subordinate id 1) and watts_on_2 (subordinate id 2) for main_driver agent, do scrape_all
         print ('SLAVE ID 1', self.scrape_all('watts_on_1'))
         print ('SLAVE ID 2', self.scrape_all('watts_on_2'))
 
-        # Define modbus_tk_test driver for master_driver agent, do set point, get point, and scrape_all
+        # Define modbus_tk_test driver for main_driver agent, do set point, get point, and scrape_all
         print self.set_point('modbus_tk_test', 'unsigned short', 1234)
         print self.get_point('modbus_tk_test', 'unsigned short')
         print self.scrape_all('modbus_tk_test')

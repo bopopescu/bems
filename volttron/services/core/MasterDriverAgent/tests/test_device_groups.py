@@ -37,7 +37,7 @@
 # }}}
 
 """
-py.test cases for global master driver settings.
+py.test cases for global main driver settings.
 """
 
 import pytest
@@ -100,7 +100,7 @@ fake_device_config = """
 }}
 """
 
-master_driver_config = """
+main_driver_config = """
 {{
     "driver_scrape_interval": 0.1,
     "group_offset_interval": {interval},
@@ -124,22 +124,22 @@ FloatNoDefault,FloatNoDefault,F,-100 to 300,TRUE,,float,CO2 Reading 0.00-2000.0 
 def config_store_connection(request, volttron_instance1):
 
     connection = volttron_instance1.build_connection(peer=CONFIGURATION_STORE)
-    # Reset master driver config store
+    # Reset main driver config store
     connection.call("manage_delete_store", PLATFORM_DRIVER)
 
-    # Start the master driver agent which would in turn start the fake driver
+    # Start the main driver agent which would in turn start the fake driver
     #  using the configs created above
-    master_uuid = volttron_instance1.install_agent(
-        agent_dir=get_services_core("MasterDriverAgent"),
+    main_uuid = volttron_instance1.install_agent(
+        agent_dir=get_services_core("MainDriverAgent"),
         config_file={},
         start=True)
-    print("agent id: ", master_uuid)
+    print("agent id: ", main_uuid)
     gevent.sleep(2)  # wait for the agent to start and start the devices
 
     yield connection
 
-    volttron_instance1.stop_agent(master_uuid)
-    volttron_instance1.remove_agent(master_uuid)
+    volttron_instance1.stop_agent(main_uuid)
+    volttron_instance1.remove_agent(main_uuid)
     connection.kill()
 
 
@@ -150,7 +150,7 @@ def config_store(request, config_store_connection):
     config_store_connection.call("manage_store", PLATFORM_DRIVER, "fake.csv", registry_config_string, config_type="csv")
 
     yield config_store_connection
-    # Reset master driver config store
+    # Reset main driver config store
     print "Wiping out store."
     config_store_connection.call("manage_delete_store", PLATFORM_DRIVER)
     gevent.sleep(0.1)
@@ -168,7 +168,7 @@ def remove_config(config_store, config_name):
 
 @pytest.mark.driver
 def test_no_groups(config_store, subscriber_agent):
-    setup_config(config_store, "config", master_driver_config, interval=0)
+    setup_config(config_store, "config", main_driver_config, interval=0)
     setup_config(config_store, "devices/fake0", fake_device_config, group=0)
     setup_config(config_store, "devices/fake1", fake_device_config, group=0)
     setup_config(config_store, "devices/fake2", fake_device_config, group=0)
@@ -187,7 +187,7 @@ def test_no_groups(config_store, subscriber_agent):
 
 @pytest.mark.driver
 def test_groups_no_interval(config_store, subscriber_agent):
-    setup_config(config_store, "config", master_driver_config, interval=0)
+    setup_config(config_store, "config", main_driver_config, interval=0)
     setup_config(config_store, "devices/fake0", fake_device_config, group=0)
     setup_config(config_store, "devices/fake1", fake_device_config, group=1)
     setup_config(config_store, "devices/fake2", fake_device_config, group=2)
@@ -205,7 +205,7 @@ def test_groups_no_interval(config_store, subscriber_agent):
 
 @pytest.mark.driver
 def test_groups_interval(config_store, subscriber_agent):
-    setup_config(config_store, "config", master_driver_config, interval=0.5)
+    setup_config(config_store, "config", main_driver_config, interval=0.5)
     setup_config(config_store, "devices/fake0", fake_device_config, group=0)
     setup_config(config_store, "devices/fake1", fake_device_config, group=1)
     setup_config(config_store, "devices/fake2", fake_device_config, group=1)
@@ -224,7 +224,7 @@ def test_groups_interval(config_store, subscriber_agent):
 
 @pytest.mark.driver
 def test_add_remove_drivers(config_store, subscriber_agent):
-    setup_config(config_store, "config", master_driver_config, interval=0.5)
+    setup_config(config_store, "config", main_driver_config, interval=0.5)
     setup_config(config_store, "devices/fake0_0", fake_device_config, group=0)
     setup_config(config_store, "devices/fake0_1", fake_device_config, group=0)
     setup_config(config_store, "devices/fake0_2", fake_device_config, group=0)

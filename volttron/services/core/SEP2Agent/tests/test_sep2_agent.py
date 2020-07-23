@@ -119,7 +119,7 @@ web_address = ""
 def agent(request, volttron_instance_module_web):
     test_agent = volttron_instance_module_web.build_agent()
 
-    # Configure a SEP2 device in the Master Driver
+    # Configure a SEP2 device in the Main Driver
     test_agent.vip.rpc.call('config.store', 'manage_delete_store', 'platform.driver').get(timeout=10)
     test_agent.vip.rpc.call('config.store', 'manage_store', 'platform.driver',
                             'devices/{}'.format(DRIVER_NAME),
@@ -150,11 +150,11 @@ def agent(request, volttron_instance_module_web):
                                                          start=True)
     print('sep2 agent id: ', sep2_id)
 
-    # Install and start a MasterDriverAgent
-    md_id = volttron_instance_module_web.install_agent(agent_dir=get_services_core("MasterDriverAgent"),
+    # Install and start a MainDriverAgent
+    md_id = volttron_instance_module_web.install_agent(agent_dir=get_services_core("MainDriverAgent"),
                                                        config_file={},
                                                        start=True)
-    print('master driver agent id: ', md_id)
+    print('main driver agent id: ', md_id)
 
     global web_address
     web_address = volttron_instance_module_web.bind_web_address

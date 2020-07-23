@@ -63,9 +63,9 @@ __version__   = '0.2.0'
 import random
 from volttron.platform.agent import utils
 try:
-	from master_driver.interfaces import BaseInterface, BaseRegister, BasicRevert
+	from main_driver.interfaces import BaseInterface, BaseRegister, BasicRevert
 except:
-	from services.core.MasterDriverAgent.master_driver.interfaces import BaseInterface, BaseRegister, BasicRevert
+	from services.core.MainDriverAgent.main_driver.interfaces import BaseInterface, BaseRegister, BasicRevert
 
 from csv import DictReader
 from StringIO import StringIO
@@ -110,15 +110,15 @@ class Interface(BasicRevert, BaseInterface):
 			verbiage = logging.DEBUG	# '-vvv'
 		_log.setLevel(verbiage)
 	'''
-	 config_dict: 'filename'.config, specified in the 'master-driver.agent' file.
+	 config_dict: 'filename'.config, specified in the 'main-driver.agent' file.
 	 registry_config_str: points csv file
 	 def configure(self, config_dict, registry_config_str):
-	 when 4.0 master driver is started, class ConfigStore is instantiated:
+	 when 4.0 main driver is started, class ConfigStore is instantiated:
 	 	volttron/platform/vip/agent/subsystems/configstore.py which exports initial_update()
 			which calls volttron/platform/store.py: def get_configs(self):
 				self.vip.rpc.call(identity, "config.initial_update" sets list of registry_configs
 				
-	scripts/install_master_driver_configs.py calls 'manage_store' rpc, which is in volttron/platform/store.py
+	scripts/install_main_driver_configs.py calls 'manage_store' rpc, which is in volttron/platform/store.py
 					which calls process_raw_config(), which stores it as a dict.
 					process_raw_config() is also called by process_store() in store.py 
 					when the platform starts ( class ConfigStoreService):
@@ -126,7 +126,7 @@ class Interface(BasicRevert, BaseInterface):
 	process_store() is called by _setup using a 'PersistentDict', i.e.:
 		store_path '/home/carl/.volttron/configuration_store/platform.driver.store'
 
-	install_master_driver_configs.py stores them as config_type="csv", it is useful for batch processing alot
+	install_main_driver_configs.py stores them as config_type="csv", it is useful for batch processing alot
 	of files at once, like when upgrading from 3.5 to 4.0
 	
 	to add single config to store, activate and start platform then:
@@ -213,7 +213,7 @@ class Interface(BasicRevert, BaseInterface):
 		return register._value
 
 	# this gets called periodically via DriverAgent::periodic_read()
-	#	( on behalf of MasterDriverAgent )
+	#	( on behalf of MainDriverAgent )
 	def _scrape_all(self):
 		result = {}
 		read_registers = self.get_registers_by_type("byte", True)

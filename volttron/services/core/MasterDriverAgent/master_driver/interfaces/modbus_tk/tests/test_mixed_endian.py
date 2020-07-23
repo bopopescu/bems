@@ -4,8 +4,8 @@ import logging
 import time
 
 from volttron.platform import get_services_core
-from master_driver.interfaces.modbus_tk.server import Server
-from master_driver.interfaces.modbus_tk.maps import Map, Catalog
+from main_driver.interfaces.modbus_tk.server import Server
+from main_driver.interfaces.modbus_tk.maps import Map, Catalog
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ ORIGINAL_DRIVER_CONFIG = """{
     "driver_config": {
         "device_address": "127.0.0.1",
          "port": 5020,
-         "slave_id": 1
+         "subordinate_id": 1
     },
     "driver_type": "modbus",
     "registry_config":"config://modbus.csv",
@@ -75,13 +75,13 @@ registers_dict = {"unsigned short": 65530,
 
 @pytest.fixture(scope="module")
 def agent(request, volttron_instance):
-    """Build MasterDriverAgent, add modbus driver & csv configurations
+    """Build MainDriverAgent, add modbus driver & csv configurations
     """
 
-    # Build master driver agent
+    # Build main driver agent
     md_agent = volttron_instance.build_agent()
 
-    # Clean out master driver configurations
+    # Clean out main driver configurations
     md_agent.vip.rpc.call('config.store',
                           'manage_delete_store',
                           'platform.driver')
@@ -123,16 +123,16 @@ def agent(request, volttron_instance):
                           NEW_REGISTER_MAP,
                           config_type='csv')
 
-    master_uuid = volttron_instance.install_agent(agent_dir=get_services_core("MasterDriverAgent"),
+    main_uuid = volttron_instance.install_agent(agent_dir=get_services_core("MainDriverAgent"),
                                                    config_file={},
                                                    start=True)
 
     gevent.sleep(10)  # wait for the agent to start and start the devices
 
     def stop():
-        """Stop master driver agent
+        """Stop main driver agent
         """
-        volttron_instance.stop_agent(master_uuid)
+        volttron_instance.stop_agent(main_uuid)
         md_agent.core.stop()
 
     request.addfinalizer(stop)
@@ -143,7 +143,7 @@ def modbus_server(request):
     ModbusClient = Catalog()['mixed_endian_reg'].get_class()
 
     server_process = Server(address='127.0.0.1', port=5020)
-    server_process.define_slave(1, ModbusClient, unsigned=False)
+    server_process.define_subordinate(1, ModbusClient, unsigned=False)
 
     server_process.start()
     time.sleep(1)

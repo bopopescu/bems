@@ -52,8 +52,8 @@
 #
 # }}}
 
-from master_driver.interfaces.modbus_tk.client import Field, Client
-from master_driver.interfaces.modbus_tk import helpers
+from main_driver.interfaces.modbus_tk.client import Field, Client
+from main_driver.interfaces.modbus_tk import helpers
 from collections import Mapping
 
 import csv

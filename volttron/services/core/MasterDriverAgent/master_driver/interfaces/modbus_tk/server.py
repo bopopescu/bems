@@ -70,7 +70,7 @@ from modbus_tk.hooks import install_hook
 ###########################################################################################
 #   MONKEY PATCH ALERT
 #
-#   To allow regression tests to quickly start-up/shutdown their Modbus slaves,
+#   To allow regression tests to quickly start-up/shutdown their Modbus subordinates,
 #   we are monkey patching two methods in modbus_tk.modbus_tcp.TcpServer.  These changes
 #   shutdown the socket as quickly as possible and re-use the socket port even if it is
 #   in TIME_WAIT.  Both of these one line changes are REQUIRED to avoid the dreaded
@@ -119,8 +119,8 @@ class Server (object):
     to 0.  Basic hooks are set up here, so that when subclassing this class, only minimal functions (namely update)
     need to be overwritten.
 
-    A Server can have multiple slaves, although TCP protocol only allows for one (RTU allows for multiple slaves).
-    In this instance, the slave id should be set to 1.
+    A Server can have multiple subordinates, although TCP protocol only allows for one (RTU allows for multiple subordinates).
+    In this instance, the subordinate id should be set to 1.
 
     This class is mostly used for testing to simulate a modbus server that we would see in the field.
     """
@@ -129,7 +129,7 @@ class Server (object):
 
         Has two important instance variables:
             _server - an instance of a Modbus RTU or TCP server.
-            _slaves - dictionary of ModbusClient slaves keyed by slave ID. (For TCP, this should be 1)
+            _subordinates - dictionary of ModbusClient subordinates keyed by subordinate ID. (For TCP, this should be 1)
 
         :param address: Address of the Server (Not used in RTU). Defaults to 127.0.0.1
         :param port: Port of the Server (0 for RTU, defaults to 502 for TCP). For RTU, this MUST be set to 0.
@@ -154,47 +154,47 @@ class Server (object):
             self._server._do_exit = types.MethodType(_do_exit, self._server)
             # End Monkey Patch
 
-        self._slaves = dict()
+        self._subordinates = dict()
 
         # Set up basic modbus hooks. These by default just log when they are getting called. To handle requests,
         #  subclasses of Server should overwrite the 'update' method, which is called by 'after'.
         self.install_hook('modbus.Server.before_handle_request', 'before')
         self.install_hook('modbus.Server.after_handle_request', 'after')
-        self.install_hook('modbus.Slave.handle_write_multiple_registers_request', 'write_register')
-        self.install_hook('modbus.Slave.handle_write_single_register_request', 'write_register')
-        self.install_hook('modbus.Slave.handle_read_holding_registers_request', 'read_register')
-        self.install_hook('modbus.Slave.handle_write_multiple_coils_request', 'write_coils')
-        self.install_hook('modbus.Slave.handle_write_single_coil_request', 'write_coils')
+        self.install_hook('modbus.Subordinate.handle_write_multiple_registers_request', 'write_register')
+        self.install_hook('modbus.Subordinate.handle_write_single_register_request', 'write_register')
+        self.install_hook('modbus.Subordinate.handle_read_holding_registers_request', 'read_register')
+        self.install_hook('modbus.Subordinate.handle_write_multiple_coils_request', 'write_coils')
+        self.install_hook('modbus.Subordinate.handle_write_single_coil_request', 'write_coils')
 
-    def define_slave(self, slave_id, client_class, unsigned=True):
-        """Add a Modbus Client Slave.
+    def define_subordinate(self, subordinate_id, client_class, unsigned=True):
+        """Add a Modbus Client Subordinate.
 
-        :param slave_id: Slave ID. This must be 1 for Modbus TCP.
+        :param subordinate_id: Subordinate ID. This must be 1 for Modbus TCP.
         :param client_class: Subclass of modbus.Client. This class holds all the register definitions.
         :param unsigned: Boolean indicating whether or not values are signed or unsigned.
-        :return: Slave instance.
+        :return: Subordinate instance.
         """
-        self._slaves[slave_id] = client_class
-        slave = self._server.add_slave(slave_id, unsigned=unsigned)
-        slave.klass = client_class
+        self._subordinates[subordinate_id] = client_class
+        subordinate = self._server.add_subordinate(subordinate_id, unsigned=unsigned)
+        subordinate.klass = client_class
         if not issubclass(client_class, Client):
             raise TypeError("client_class must be subclass of {0}".format(Client))
 
         for request in client_class().requests():
             # logger.info("Adding [%s], %s, %s, %s", request.name, request.table, request.address, request.count)
-            slave.add_block(request.name, request.table, request.address, request.count)
-        return slave
+            subordinate.add_block(request.name, request.table, request.address, request.count)
+        return subordinate
 
     @classmethod
     def install_hook(cls, hook_name, method):
         """Helper method for installing hooks. This is necessary to ensure child methods are called if implemented."""
         install_hook(hook_name, getattr(cls, method))
 
-    def set_values(self, slave_id, field, values):
-        slave = self._server.get_slave(slave_id)
-        slave_class = self._slaves[slave_id]
-        request = slave_class().get_request(field)
-        slave.set_values(request.name, field.address, values)
+    def set_values(self, subordinate_id, field, values):
+        subordinate = self._server.get_subordinate(subordinate_id)
+        subordinate_class = self._subordinates[subordinate_id]
+        request = subordinate_class().get_request(field)
+        subordinate.set_values(request.name, field.address, values)
 
     ##################
     # Server Methods #
@@ -233,18 +233,18 @@ class Server (object):
 
     @staticmethod
     def write_register(args):
-        slave, request_pdu = args
-        # logger.debug("Writing: {0}-{1}".format(slave, request_pdu))
+        subordinate, request_pdu = args
+        # logger.debug("Writing: {0}-{1}".format(subordinate, request_pdu))
 
     @staticmethod
     def read_register(args):
-        slave, request_pdu = args
-        # logger.debug("Reading: {0}-{1}".format(slave, request_pdu))
+        subordinate, request_pdu = args
+        # logger.debug("Reading: {0}-{1}".format(subordinate, request_pdu))
 
     @staticmethod
     def write_coils(args):
-        slave, request_pdu = args
-        # logger.debug("Writing Coils: {0}-{1}".format(slave, request_pdu))
+        subordinate, request_pdu = args
+        # logger.debug("Writing Coils: {0}-{1}".format(subordinate, request_pdu))
 
 
 class ServerProcess (multiprocessing.Process):

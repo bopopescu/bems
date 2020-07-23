@@ -63,7 +63,7 @@ REGISTER_VALUES = {
 
 @pytest.fixture(scope="module")
 def agent(request, volttron_instance):
-    """Build MasterDriverAgent and add DNP3 driver config to it."""
+    """Build MainDriverAgent and add DNP3 driver config to it."""
 
     def update_config(agent_id, name, value, cfg_type):
         test_agent.vip.rpc.call('config.store', 'manage_store', agent_id, name, value, config_type=cfg_type)
@@ -76,18 +76,18 @@ def agent(request, volttron_instance):
                                                       vip_identity=DNP3_AGENT_ID,
                                                       start=True)
 
-    # Build and start MasterDriverAgent
+    # Build and start MainDriverAgent
     test_agent.vip.rpc.call('config.store', 'manage_delete_store', MASTER_DRIVER_AGENT_ID)
     update_config(MASTER_DRIVER_AGENT_ID, 'devices/dnp3', DRIVER_CONFIG_STRING, 'json')
     update_config(MASTER_DRIVER_AGENT_ID, 'dnp3.csv', REGISTRY_CONFIG_STRING, 'csv')
-    master_uuid = volttron_instance.install_agent(agent_dir=get_services_core("MasterDriverAgent"),
+    main_uuid = volttron_instance.install_agent(agent_dir=get_services_core("MainDriverAgent"),
                                                   config_file={},
                                                   start=True)
 
     gevent.sleep(3)                # Wait for the agent to start and start the devices
 
     def stop():
-        volttron_instance.stop_agent(master_uuid)
+        volttron_instance.stop_agent(main_uuid)
         volttron_instance.stop_agent(dnp3_agent_uuid)
         test_agent.core.stop()
 

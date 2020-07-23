@@ -11,7 +11,7 @@ DRIVER_CONFIG_STRING = """{
         "name": "watts_on",
         "device_address": "/dev/tty.usbserial-AL00IEEY",
         "port": 0,
-        "slave_id": 2,
+        "subordinate_id": 2,
         "baudrate": 115200,
         "bytesize": 8,
         "parity": "none",
@@ -54,13 +54,13 @@ serial_commit,0x605,uint16,None,TRUE"""
 
 @pytest.fixture(scope="module")
 def agent(request, volttron_instance):
-    """Build MasterDriverAgent, add modbus driver & csv configurations
+    """Build MainDriverAgent, add modbus driver & csv configurations
     """
 
-    # Build master driver agent
+    # Build main driver agent
     md_agent = volttron_instance.build_agent()
 
-    # Clean out master driver configurations
+    # Clean out main driver configurations
     md_agent.vip.rpc.call('config.store',
                           'manage_delete_store',
                           'platform.driver')
@@ -88,16 +88,16 @@ def agent(request, volttron_instance):
                           REGISTRY_CONFIG_MAP,
                           config_type='csv')
 
-    master_uuid = volttron_instance.install_agent(agent_dir=get_services_core("MasterDriverAgent"),
+    main_uuid = volttron_instance.install_agent(agent_dir=get_services_core("MainDriverAgent"),
                                                    config_file={},
                                                    start=True)
 
     gevent.sleep(10)  # wait for the agent to start and start the devices
 
     def stop():
-        """Stop master driver agent
+        """Stop main driver agent
         """
-        volttron_instance.stop_agent(master_uuid)
+        volttron_instance.stop_agent(main_uuid)
         md_agent.core.stop()
 
     request.addfinalizer(stop)

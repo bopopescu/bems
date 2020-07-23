@@ -34,7 +34,7 @@ import pytest
 import yaml
 
 from dnp3.points import PointDefinitions
-from mesa_master_test import MesaMasterTest
+from mesa_main_test import MesaMainTest
 from volttron.platform import get_services_core
 from volttron.platform.agent.utils import strip_comments
 
@@ -137,18 +137,18 @@ def mesa_data_agent(request, volttron_instance):
 
 
 @pytest.fixture(scope="module")
-def run_data_master(request):
-    """Run Mesa master application."""
-    master = MesaMasterTest(local_ip=MESA_AGENT_CONFIG['local_ip'],
+def run_data_main(request):
+    """Run Mesa main application."""
+    main = MesaMainTest(local_ip=MESA_AGENT_CONFIG['local_ip'],
                             port=MESA_AGENT_CONFIG['port'])
-    master.connect()
+    main.connect()
 
     def stop():
-        master.shutdown()
+        main.shutdown()
 
     request.addfinalizer(stop)
 
-    return master
+    return main
 
 
 @pytest.fixture(scope="function")
@@ -181,7 +181,7 @@ class TestMesaData:
     def set_point(agent, point_name, value):
         """Use DNP3Agent to set a point value for a DNP3 resource."""
         response = agent.vip.rpc.call(MESA_AGENT_ID, 'set_point', point_name, value).get(timeout=10)
-        gevent.sleep(1)     # Give the Master time to receive an echoed point value back from the Outstation.
+        gevent.sleep(1)     # Give the Main time to receive an echoed point value back from the Outstation.
         return response
 
     @staticmethod
@@ -201,17 +201,17 @@ class TestMesaData:
         return json.load(open(send_json))
 
     @staticmethod
-    def send_points(master, send_json, send_in_step_order=True):
-        """Master loads points from json and send them to mesa agent.
+    def send_points(main, send_json, send_in_step_order=True):
+        """Main loads points from json and send them to mesa agent.
         Return empty dictionary if function sent successfully, the dictionary with key and error otherwise."""
         exceptions = {}
         try:
             if send_in_step_order:
-                master.send_function_test(func_test_json=send_json,
+                main.send_function_test(func_test_json=send_json,
                                           point_def_path=POINT_DEFINITIONS_PATH,
                                           func_def_path=FUNCTION_DEFINITIONS_PATH)
             else:
-                master.send_json(pdefs, FUNCTION_DEFINITIONS_PATH, send_json=send_json)
+                main.send_json(pdefs, FUNCTION_DEFINITIONS_PATH, send_json=send_json)
         except Exception as err:
             print("{}: {}".format(type(err).__name__, str(err)))
             exceptions['key'] = type(err).__name__
@@ -219,22 +219,22 @@ class TestMesaData:
         return exceptions
 
     @staticmethod
-    def get_value_from_master(master, point_name):
-        """Get value of the point from master after being set by test agent."""
+    def get_value_from_main(main, point_name):
+        """Get value of the point from main after being set by test agent."""
         try:
             pdef = pdefs.point_named(point_name)
             group = input_group_map[pdef.group]
             index = pdef.index
-            return master.soe_handler.result[group][index]
+            return main.soe_handler.result[group][index]
         except KeyError:
             return None
 
-    def send_function_and_confirm(self, master, agent, function):
+    def send_function_and_confirm(self, main, agent, function):
         """Send point values for a function and test that they were received correctly."""
 
         # 'function' can be the name of a file containing json or it can be a dictionary
         function_to_send = self.convert_json_file_to_dict(function) if type(function) == str else function
-        exceptions = self.send_points(master, function_to_send)
+        exceptions = self.send_points(main, function_to_send)
         assert exceptions == {}
 
         for point_name in function_to_send.keys():
@@ -268,7 +268,7 @@ class TestMesaData:
         assert exceptions == {}
 
     # **********
-    # ********** OUTPUT TESTS (send data from Master to Agent to ControlAgent) ************
+    # ********** OUTPUT TESTS (send data from Main to Agent to ControlAgent) ************
     # **********
 
     def test_point_definition(self, mesa_data_agent, reset):
@@ -277,7 +277,7 @@ class TestMesaData:
         point_def = self.get_point_definitions(mesa_data_agent, [point_name]).get(point_name, None)
         assert point_def is not None, "Agent has no point definition for {}".format(point_name)
 
-    def test_simple_function(self, run_data_master, mesa_data_agent, reset):
+    def test_simple_function(self, run_data_main, mesa_data_agent, reset):
         """Send charge_discharge function values -- a simple function (no arrays or selector blocks)."""
         charge_discharge_function = {
             "name": "function_test_name",
@@ -296,14 +296,14 @@ class TestMesaData:
             "DCHD.ModEna": 1
         }
         self.set_point(mesa_data_agent, 'DCHA.Beh', True)         # Set the function support point to True
-        self.send_function_and_confirm(run_data_master, mesa_data_agent, charge_discharge_function)
+        self.send_function_and_confirm(run_data_main, mesa_data_agent, charge_discharge_function)
 
     # **********
-    # ********** INPUT TESTS (send data from ControlAgent to Agent to Master) ************
+    # ********** INPUT TESTS (send data from ControlAgent to Agent to Main) ************
     # **********
 
-    def test_set_point(self, run_data_master, mesa_data_agent, reset):
+    def test_set_point(self, run_data_main, mesa_data_agent, reset):
         """Test set an input point and confirm getting the same value for that point."""
         self.set_point(mesa_data_agent, TEST_SET_POINT_NAME, 45)
-        received_val = self.get_value_from_master(run_data_master, TEST_SET_POINT_NAME)
+        received_val = self.get_value_from_main(run_data_main, TEST_SET_POINT_NAME)
         assert received_val == 45, "Expected {} = {}, got {}".format(TEST_SET_POINT_NAME, 45, received_val)

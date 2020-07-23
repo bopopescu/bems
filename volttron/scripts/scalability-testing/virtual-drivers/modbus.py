@@ -47,7 +47,7 @@ from pymodbus.server.sync import StartTcpServer
 
 from pymodbus.device import ModbusDeviceIdentification
 from pymodbus.datastore import ModbusSequentialDataBlock
-from pymodbus.datastore import ModbusSlaveContext, ModbusServerContext
+from pymodbus.datastore import ModbusSubordinateContext, ModbusServerContext
 from pymodbus.pdu import ModbusPDU
 
 from csv import DictReader
@@ -234,12 +234,12 @@ class DeviceAbstraction(object):
             log.debug("{} Read only: {} Address: {} Count: {}".format("byte", False, start, count))
             hr = CallbackSequentialDataBlock(log_callback, start, [0]*count)
         
-        store = ModbusSlaveContext(
+        store = ModbusSubordinateContext(
             di = di,
             co = co,
             hr = hr,
             ir = ir)
-        context = ModbusServerContext(slaves=store, single=True)
+        context = ModbusServerContext(subordinates=store, single=True)
         
         return context  
 

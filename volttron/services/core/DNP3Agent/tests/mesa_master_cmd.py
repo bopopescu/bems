@@ -34,7 +34,7 @@ import sys
 from pydnp3 import opendnp3
 
 from dnp3.points import PointDefinitions, DIRECT_OPERATE
-from mesa_master import MesaMaster
+from mesa_main import MesaMain
 from function_test import FunctionTest
 
 LOG_LEVELS = opendnp3.levels.NORMAL
@@ -77,20 +77,20 @@ _log.addHandler(stdout_stream)
 _log.setLevel(logging.DEBUG)
 
 
-class MesaMasterCmd(cmd.Cmd):
+class MesaMainCmd(cmd.Cmd):
     """
-        Run MesaMaster from the command line in support of certain types of ad-hoc outstation testing.
+        Run MesaMain from the command line in support of certain types of ad-hoc outstation testing.
     """
 
     def __init__(self):
         cmd.Cmd.__init__(self)
-        self.prompt = 'master> '   # Used by the Cmd framework, displayed when issuing a command-line prompt.
+        self.prompt = 'main> '   # Used by the Cmd framework, displayed when issuing a command-line prompt.
         self._application = None
 
     @property
     def application(self):
         if self._application is None:
-            self._application = MesaMaster(local_ip=SERVER_IP, port=PORT_NUMBER)
+            self._application = MesaMain(local_ip=SERVER_IP, port=PORT_NUMBER)
             self._application.connect()
         return self._application
 
@@ -138,7 +138,7 @@ class MesaMasterCmd(cmd.Cmd):
 
 
 def main():
-    cmd_interface = MesaMasterCmd()
+    cmd_interface = MesaMainCmd()
     _log.debug('Initialization complete. In command loop.')
     cmd_interface.startup()
     _log.debug('Exiting.')

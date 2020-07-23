@@ -54,9 +54,9 @@
 
 from gevent import monkey
 from volttron.platform.agent import utils
-from master_driver.interfaces import BaseRegister, BaseInterface, BasicRevert
-from master_driver.interfaces.modbus_tk import helpers
-from master_driver.interfaces.modbus_tk.maps import Map
+from main_driver.interfaces import BaseRegister, BaseInterface, BasicRevert
+from main_driver.interfaces.modbus_tk import helpers
+from main_driver.interfaces.modbus_tk.maps import Map
 
 import logging
 import struct
@@ -79,7 +79,7 @@ parity_map = dict(
     space='S'
 )
 
-config_keys = ["name", "device_type", "device_address", "port", "slave_id", "baudrate", "bytesize", "parity",
+config_keys = ["name", "device_type", "device_address", "port", "subordinate_id", "baudrate", "bytesize", "parity",
                "stopbits", "xonxoff", "addressing", "endian", "write_multiple_registers", "register_map"]
 
 register_map_columns = ["register name", "address", "type", "units", "writable", "default value", "transform", "table",
@@ -269,7 +269,7 @@ class Interface(BasicRevert, BaseInterface):
         name = config_dict.get('name', 'UNKOWN')
         device_address = config_dict['device_address']
         port = config_dict.get('port', None)
-        slave_address = config_dict.get('slave_id', 1)
+        subordinate_address = config_dict.get('subordinate_id', 1)
         baudrate = config_dict.get('baudrate', 9600)
         bytesize = config_dict.get('bytesize', 8)
         parity = parity_map[config_dict.get('parity', 'none')]
@@ -327,7 +327,7 @@ class Interface(BasicRevert, BaseInterface):
 
         self.modbus_client = modbus_client_class(device_address=device_address,
                                                  port=port,
-                                                 slave_address=slave_address,
+                                                 subordinate_address=subordinate_address,
                                                  write_single_values=write_single_values)
 
         # Set modbus client transport based on device configure

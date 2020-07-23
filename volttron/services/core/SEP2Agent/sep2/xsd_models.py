@@ -8397,7 +8397,7 @@ class LocaleType(GeneratedsSuper):
 
 
 class mRIDType(GeneratedsSuper):
-    """A master resource identifier. The IANA PEN [PEN] provider ID SHALL
+    """A main resource identifier. The IANA PEN [PEN] provider ID SHALL
     be specified in bits 0-31, the least-significant bits, and
     objects created by that provider SHALL be assigned unique IDs
     with the remaining 96 bits.

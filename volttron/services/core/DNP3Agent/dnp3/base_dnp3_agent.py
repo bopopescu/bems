@@ -61,7 +61,7 @@ class BaseDNP3Agent(Agent):
     """
         DNP3Agent is a VOLTTRON agent that handles DNP3 outstation communications.
 
-        DNP3Agent models a DNP3 outstation, communicating with a DNP3 master.
+        DNP3Agent models a DNP3 outstation, communicating with a DNP3 main.
 
         For further information about this agent and DNP3 communications, please see the VOLTTRON
         DNP3 specification, located in VOLTTRON readthedocs
@@ -113,7 +113,7 @@ class BaseDNP3Agent(Agent):
         try:
             if type(self.points) == str:
                 # There's something odd here. The point and function definitions are defined in the
-                # config file using a 'config://' entry (previously used only by MasterDriveAgent).
+                # config file using a 'config://' entry (previously used only by MainDriveAgent).
                 # It seems like this should have been resolved to the registry entry at which the
                 # 'config://' entry points, and in that case 'self.points' should already be
                 # a json structure. But instead, it's still the string 'config://mesa_points.config'.
@@ -141,7 +141,7 @@ class BaseDNP3Agent(Agent):
 
     @Core.receiver('onstart')
     def onstart(self, sender, **kwargs):
-        """Start the DNP3Outstation instance, kicking off communication with the DNP3 Master."""
+        """Start the DNP3Outstation instance, kicking off communication with the DNP3 Main."""
         self._configure_parameters(self.default_config)
         _log.info('Starting DNP3Outstation')
         self.publish_outstation_status('starting')
@@ -162,7 +162,7 @@ class BaseDNP3Agent(Agent):
                         Default: mesa/outstation_status.
             local_ip: (string) Outstation's host address (DNS resolved).
                         Default: 0.0.0.0.
-            port: (integer) Outstation's port number - the port that the remote endpoint (Master) is listening on.
+            port: (integer) Outstation's port number - the port that the remote endpoint (Main) is listening on.
                         Default: 20000.
             outstation_config: (dictionary) Outstation configuration parameters. All are optional.
                 Parameters include:
@@ -273,7 +273,7 @@ class BaseDNP3Agent(Agent):
 
     def process_point_value(self, command_type, command, index, op_type):
         """
-            A point value was received from the Master. Process its payload.
+            A point value was received from the Main. Process its payload.
 
         @param command_type: Either 'Select' or 'Operate'.
         @param command: A ControlRelayOutputBlock or else a wrapped data value (AnalogOutputInt16, etc.).
@@ -418,7 +418,7 @@ class BaseDNP3Agent(Agent):
 
     def update_input_point(self, point_def, value):
         """
-            Update an input point. This may send its PointValue to the Master.
+            Update an input point. This may send its PointValue to the Main.
 
         :param point_def: A PointDefinition.
         :param value: A value to send (unwrapped simple data type, or else a list/array).
@@ -438,7 +438,7 @@ class BaseDNP3Agent(Agent):
     @staticmethod
     def _apply_point_update(point_def, point_index, value):
         """
-            Set an input point in the outstation database. This may send its PointValue to the Master.
+            Set an input point in the outstation database. This may send its PointValue to the Main.
 
         :param point_def: A PointDefinition.
         :param point_index: A numeric index for the point.
@@ -463,7 +463,7 @@ class BaseDNP3Agent(Agent):
         _log.debug('Sent DNP3 point {}, value={}'.format(point_def, wrapped_val.value))
 
     def publish_point_value(self, point_value):
-        """Publish a PointValue as it is received from the DNP3 Master."""
+        """Publish a PointValue as it is received from the DNP3 Main."""
         _log.info('Publishing DNP3 {}'.format(point_value))
         self.publish_points({point_value.name: (point_value.unwrapped_value() if point_value else None)})
 

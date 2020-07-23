@@ -138,7 +138,7 @@ class SQLiteTaggingService(BaseTaggingService):
         err_message = ""
         table_names = []
         try:
-            stmt = "SELECT name FROM sqlite_master " \
+            stmt = "SELECT name FROM sqlite_main " \
                 "WHERE type='table';"
             name_list = self.sqlite_utils.select(stmt, None, fetch_all=True)
             table_names = [name[0] for name in name_list]

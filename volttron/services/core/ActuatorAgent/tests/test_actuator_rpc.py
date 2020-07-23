@@ -66,7 +66,7 @@ def publish_agent(request, volttron_instance1):
     """
     Fixture used for setting up the environment.
     1. Creates fake driver configs
-    2. Starts the master driver agent with the created fake driver agents
+    2. Starts the main driver agent with the created fake driver agents
     3. Starts the actuator agent
     4. Creates an instance Agent class for publishing and returns it
 
@@ -76,7 +76,7 @@ def publish_agent(request, volttron_instance1):
     """
 
 
-    # Reset master driver config store
+    # Reset main driver config store
     cmd = ['volttron-ctl', 'config', 'delete', PLATFORM_DRIVER, '--all']
     process = Popen(cmd, env=volttron_instance1.env,
                     cwd='scripts/scalability-testing',
@@ -85,7 +85,7 @@ def publish_agent(request, volttron_instance1):
     print(result)
     assert result == 0
 
-    # Add master driver configuration files to config store.
+    # Add main driver configuration files to config store.
     cmd = ['volttron-ctl', 'config', 'store',PLATFORM_DRIVER,
            'fake.csv', 'fake_unit_testing.csv', '--csv']
     process = Popen(cmd, env=volttron_instance1.env,
@@ -106,17 +106,17 @@ def publish_agent(request, volttron_instance1):
         print(result)
         assert result == 0
 
-    # Start the master driver agent which would intern start the fake driver
+    # Start the main driver agent which would intern start the fake driver
     #  using the configs created above
-    master_uuid = volttron_instance1.install_agent(
-        agent_dir=get_services_core("MasterDriverAgent"),
+    main_uuid = volttron_instance1.install_agent(
+        agent_dir=get_services_core("MainDriverAgent"),
         config_file={},
         start=True)
-    print("agent id: ", master_uuid)
+    print("agent id: ", main_uuid)
     gevent.sleep(2)  # wait for the agent to start and start the devices
 
     # Start the actuator agent through which publish agent should communicate
-    # to fake device. Start the master driver agent which would intern start
+    # to fake device. Start the main driver agent which would intern start
     # the fake driver using the configs created above
     actuator_uuid = volttron_instance1.install_agent(
         agent_dir=get_services_core("ActuatorAgent"),
@@ -132,9 +132,9 @@ def publish_agent(request, volttron_instance1):
     def stop_agent():
         print("In teardown method of module")
         volttron_instance1.stop_agent(actuator_uuid)
-        volttron_instance1.stop_agent(master_uuid)
+        volttron_instance1.stop_agent(main_uuid)
         volttron_instance1.remove_agent(actuator_uuid)
-        volttron_instance1.remove_agent(master_uuid)
+        volttron_instance1.remove_agent(main_uuid)
         publish_agent.core.stop()
 
     request.addfinalizer(stop_agent)

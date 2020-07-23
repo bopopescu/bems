@@ -34,9 +34,9 @@ from pydnp3 import opendnp3, openpal, asiopal, asiodnp3
 _log = logging.getLogger(__name__)
 
 
-class DNP3Master:
+class DNP3Main:
     """
-        Interface for all master application callback info except for measurement values.
+        Interface for all main application callback info except for measurement values.
     """
 
     def __init__(self,
@@ -47,7 +47,7 @@ class DNP3Master:
                  log_handler=asiodnp3.ConsoleLogger().Create(),
                  channel_listener=asiodnp3.PrintingChannelListener().Create(),
                  soe_handler=asiodnp3.PrintingSOEHandler().Create(),
-                 master_application=asiodnp3.DefaultMasterApplication().Create(),
+                 main_application=asiodnp3.DefaultMainApplication().Create(),
                  stack_config=None):
 
         self.log_levels = log_levels
@@ -57,21 +57,21 @@ class DNP3Master:
         self.log_handler = log_handler
         self.channel_listener = channel_listener
         self.soe_handler = soe_handler
-        self.master_application = master_application
+        self.main_application = main_application
 
         self.stackConfig = stack_config
         if not self.stackConfig:
-            # The master config object for a master.
-            self.stackConfig = asiodnp3.MasterStackConfig()
-            self.stackConfig.master.responseTimeout = openpal.TimeDuration().Seconds(2)
+            # The main config object for a main.
+            self.stackConfig = asiodnp3.MainStackConfig()
+            self.stackConfig.main.responseTimeout = openpal.TimeDuration().Seconds(2)
             self.stackConfig.link.RemoteAddr = 10
 
         self.manager = None
         self.channel = None
-        self.master = None
+        self.main = None
 
     def connect(self):
-        """Connect to an outstation, add an master to the channel, and start the communications."""
+        """Connect to an outstation, add an main to the channel, and start the communications."""
 
         # Root DNP3 object used to create channels and sessions
         if not self.manager:
@@ -86,20 +86,20 @@ class DNP3Master:
                                                  self.port,
                                                  self.channel_listener)
 
-        # Create a new master on a previously declared port, with a name, log level, command acceptor, and config info.
+        # Create a new main on a previously declared port, with a name, log level, command acceptor, and config info.
         # This returns a thread-safe interface used for sending commands.
-        self.master = self.channel.AddMaster("master",
+        self.main = self.channel.AddMain("main",
                                              self.soe_handler,
-                                             self.master_application,
+                                             self.main_application,
                                              self.stackConfig)
 
-        # Enable the master. This will start communications.
-        self.master.Enable()
+        # Enable the main. This will start communications.
+        self.main.Enable()
 
     def reconnect(self, host_ip, port):
-        """Reconnect master to a different host and port and start the communications."""
-        if self.master:
-            self.master.Disable()
+        """Reconnect main to a different host and port and start the communications."""
+        if self.main:
+            self.main.Disable()
 
         if self.channel:
             self.channel.Shutdown()
@@ -118,7 +118,7 @@ class DNP3Master:
         :param callback: callback that will be invoked upon completion or failure
         :param config: optional configuration that controls normal callbacks and allows the user to be specified for SA
         """
-        self.master.DirectOperate(command, index, callback, config)
+        self.main.DirectOperate(command, index, callback, config)
 
     def send_direct_operate_command_set(self, command_set, callback=asiodnp3.PrintingCommandCallback.Get(),
                                         config=opendnp3.TaskConfig().Default()):
@@ -129,7 +129,7 @@ class DNP3Master:
         :param callback: callback that will be invoked upon completion or failure
         :param config: optional configuration that controls normal callbacks and allows the user to be specified for SA
         """
-        self.master.DirectOperate(command_set, callback, config)
+        self.main.DirectOperate(command_set, callback, config)
 
     def send_select_and_operate_command(self, command, index, callback=asiodnp3.PrintingCommandCallback.Get(),
                                         config=opendnp3.TaskConfig().Default()):
@@ -141,7 +141,7 @@ class DNP3Master:
         :param callback: callback that will be invoked upon completion or failure
         :param config: optional configuration that controls normal callbacks and allows the user to be specified for SA
         """
-        self.master.SelectAndOperate(command, index, callback, config)
+        self.main.SelectAndOperate(command, index, callback, config)
 
     def send_select_and_operate_command_set(self, command_set, callback=asiodnp3.PrintingCommandCallback.Get(),
                                             config=opendnp3.TaskConfig().Default()):
@@ -152,13 +152,13 @@ class DNP3Master:
         :param callback: callback that will be invoked upon completion or failure
         :param config: optional configuration that controls normal callbacks and allows the user to be specified for SA
         """
-        self.master.SelectAndOperate(command_set, callback, config)
+        self.main.SelectAndOperate(command_set, callback, config)
 
     def shutdown(self):
         """
             Shutdown manager and terminate the threadpool
         """
-        del self.master
+        del self.main
         del self.channel
         if self.manager:
             self.manager.Shutdown()
@@ -365,7 +365,7 @@ class SOEHandler(opendnp3.ISOEHandler):
     """
         Override ISOEHandler in this manner to implement application-specific sequence-of-events behavior.
 
-        This is an interface for SequenceOfEvents (SOE) callbacks from the Master stack to the application layer.
+        This is an interface for SequenceOfEvents (SOE) callbacks from the Main stack to the application layer.
     """
 
     def __init__(self):
@@ -415,34 +415,34 @@ class SOEHandler(opendnp3.ISOEHandler):
         pass
 
 
-class MasterApplication(opendnp3.IMasterApplication):
+class MainApplication(opendnp3.IMainApplication):
     def __init__(self):
-        super(MasterApplication, self).__init__()
+        super(MainApplication, self).__init__()
 
         # Overridden method
         def AssignClassDuringStartup(self):
-            _log.debug('In MasterApplication.AssignClassDuringStartup')
+            _log.debug('In MainApplication.AssignClassDuringStartup')
             return False
 
         # Overridden method
         def OnClose(self):
-            _log.debug('In MasterApplication.OnClose')
+            _log.debug('In MainApplication.OnClose')
 
         # Overridden method
         def OnOpen(self):
-            _log.debug('In MasterApplication.OnOpen')
+            _log.debug('In MainApplication.OnOpen')
 
         # Overridden method
         def OnReceiveIIN(self, iin):
-            _log.debug('In MasterApplication.OnReceiveIIN')
+            _log.debug('In MainApplication.OnReceiveIIN')
 
         # Overridden method
         def OnTaskComplete(self, info):
-            _log.debug('In MasterApplication.OnTaskComplete')
+            _log.debug('In MainApplication.OnTaskComplete')
 
         # Overridden method
         def OnTaskStart(self, type, id):
-            _log.debug('In MasterApplication.OnTaskStart')
+            _log.debug('In MainApplication.OnTaskStart')
 
 
 def collection_callback(result=None):
@@ -478,13 +478,13 @@ def restart_callback(result=opendnp3.RestartOperationResult()):
 
 
 def main():
-    dnp3_master = DNP3Master(log_handler=LogHandler(),
+    dnp3_main = DNP3Main(log_handler=LogHandler(),
                              channel_listener=ChannelListener(),
                              soe_handler=SOEHandler(),
-                             master_application=MasterApplication())
-    dnp3_master.connect()
+                             main_application=MainApplication())
+    dnp3_main.connect()
     # Ad-hoc tests can be inserted here if desired.
-    dnp3_master.shutdown()
+    dnp3_main.shutdown()
 
 
 if __name__ == '__main__':

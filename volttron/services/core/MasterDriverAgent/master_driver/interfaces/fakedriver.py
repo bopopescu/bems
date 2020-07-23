@@ -42,7 +42,7 @@ import datetime
 import math
 from math import pi
 
-from master_driver.interfaces import BaseInterface, BaseRegister, BasicRevert
+from main_driver.interfaces import BaseInterface, BaseRegister, BasicRevert
 from csv import DictReader
 from StringIO import StringIO
 import logging

@@ -52,12 +52,12 @@ class DNP3Outstation(opendnp3.IOutstationApplication):
         DNP3 spec section 5.1.6.2:
             The Application Layer provides the following services for the DNP3 User Layer in an outstation:
                 - Notifies the DNP3 User Layer when action requests, such as control output,
-                  analog output, freeze and file operations, arrive from a master.
-                - Requests data and information from the outstation that is wanted by a master
-                  and formats the responses returned to a master.
-                - Assures that event data is successfully conveyed to a master (using
+                  analog output, freeze and file operations, arrive from a main.
+                - Requests data and information from the outstation that is wanted by a main
+                  and formats the responses returned to a main.
+                - Assures that event data is successfully conveyed to a main (using
                   Application Layer confirmation).
-                - Sends notifications to the master when the outstation restarts, has queued events,
+                - Sends notifications to the main when the outstation restarts, has queued events,
                   and requires time synchronization.
 
         DNP spec section 5.1.6.3:
@@ -152,7 +152,7 @@ class DNP3Outstation(opendnp3.IOutstationApplication):
         self.command_handler = OutstationCommandHandler()
         self.outstation = self.channel.AddOutstation("outstation", self.command_handler, self, self.stack_config)
 
-        # Set the singleton instance that communicates with the Master.
+        # Set the singleton instance that communicates with the Main.
         self.set_outstation(self.outstation)
 
         _log.info('Enabling the DNP3 Outstation. Traffic can now start to flow.')
@@ -287,7 +287,7 @@ class DNP3Outstation(opendnp3.IOutstationApplication):
         """
             Record an opendnp3 data value (Analog, Binary, etc.) in the outstation's database.
 
-            The data value gets sent to the Master as a side-effect.
+            The data value gets sent to the Main as a side-effect.
 
         :param value: An instance of Analog, Binary, or another opendnp3 data value.
         :param index: (integer) Index of the data definition in the opendnp3 database.
@@ -326,7 +326,7 @@ class DNP3Outstation(opendnp3.IOutstationApplication):
 class OutstationCommandHandler(opendnp3.ICommandHandler):
     """
         ICommandHandler implements the Outstation's handling of Select and Operate,
-        which relay commands and data from the Master to the Outstation.
+        which relay commands and data from the Main to the Outstation.
     """
 
     def Start(self):
@@ -341,7 +341,7 @@ class OutstationCommandHandler(opendnp3.ICommandHandler):
 
     def Select(self, command, index):
         """
-            The Master sent a Select command to the Outstation. Handle it.
+            The Main sent a Select command to the Outstation. Handle it.
 
         :param command: ControlRelayOutputBlock,
                         AnalogOutputInt16, AnalogOutputInt32, AnalogOutputFloat32, or AnalogOutputDouble64.
@@ -352,7 +352,7 @@ class OutstationCommandHandler(opendnp3.ICommandHandler):
 
     def Operate(self, command, index, op_type):
         """
-            The Master sent an Operate command to the Outstation. Handle it.
+            The Main sent an Operate command to the Outstation. Handle it.
 
         :param command: ControlRelayOutputBlock,
                         AnalogOutputInt16, AnalogOutputInt32, AnalogOutputFloat32, or AnalogOutputDouble64.

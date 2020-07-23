@@ -1,7 +1,7 @@
-from master_driver.interfaces.modbus_tk.server import Server
-from master_driver.interfaces.modbus_tk import helpers
-from master_driver.interfaces.modbus_tk.client import Client, Field
-from master_driver.interfaces.modbus_tk.maps import Map, Catalog
+from main_driver.interfaces.modbus_tk.server import Server
+from main_driver.interfaces.modbus_tk import helpers
+from main_driver.interfaces.modbus_tk.client import Client, Field
+from main_driver.interfaces.modbus_tk.maps import Map, Catalog
 import serial
 
 from struct import pack, unpack
@@ -84,13 +84,13 @@ def watts_on_server():
     # Can define ModbusClient2 by Map or defined the class as ModbusClient1 or ModbusClient2
 
     # modbus_map = Map(
-    #     map_dir='/Users/anhnguyen/repos/kisensum-volttron/volttron/services/core/MasterDriverAgent/master_driver/interfaces/modbus_tk/maps',
+    #     map_dir='/Users/anhnguyen/repos/kisensum-volttron/volttron/services/core/MainDriverAgent/main_driver/interfaces/modbus_tk/maps',
     #     addressing='offset', name='watts_on', file='watts_on.csv', endian='big')
     # ModbusClient2 = modbus_map.get_class()
 
     ModbusClient2 = Catalog()['watts_on'].get_class()
 
-    client = ModbusClient2(slave_address=2, verbose=True)
+    client = ModbusClient2(subordinate_address=2, verbose=True)
     client.set_transport_rtu('/dev/tty.usbserial-AL00IEEY',
                              115200,
                              serial.EIGHTBITS,
@@ -110,7 +110,7 @@ if __name__ == '__main__':
     # For tcp transport
     ModbusClient = Catalog()['modbus_tk_test'].get_class()
     server_process = Server(address='127.0.0.1', port=5020)
-    server_process.define_slave(1, ModbusClient, unsigned=True)
+    server_process.define_subordinate(1, ModbusClient, unsigned=True)
     server_process.start()
 
     # For rtu transport

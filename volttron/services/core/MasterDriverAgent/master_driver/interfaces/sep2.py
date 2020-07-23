@@ -55,7 +55,7 @@
 from datetime import datetime, timedelta
 import logging
 
-from master_driver.interfaces import BaseInterface, BaseRegister, BasicRevert
+from main_driver.interfaces import BaseInterface, BaseRegister, BasicRevert
 
 _log = logging.getLogger(__name__)
 type_mapping = {"string": str,
@@ -135,11 +135,11 @@ class Interface(BasicRevert, BaseInterface):
         Test drivers for the SEP2 interface can be configured as follows:
 
             cd $VOLTTRON_ROOT
-            export DRIVER_ROOT=$VOLTTRON_ROOT/services/core/MasterDriverAgent/master_driver
+            export DRIVER_ROOT=$VOLTTRON_ROOT/services/core/MainDriverAgent/main_driver
             volttron-ctl config store platform.driver sep2.csv $DRIVER_ROOT/sep2.csv --csv
             volttron-ctl config store platform.driver devices/sep2_1 $DRIVER_ROOT/test_sep2_1.config
             volttron-ctl config store platform.driver devices/sep2_2 $DRIVER_ROOT/test_sep2_2.config
-            echo SEP2 drivers configured for MasterDriver:
+            echo SEP2 drivers configured for MainDriver:
             volttron-ctl config list platform.driver
     """
 

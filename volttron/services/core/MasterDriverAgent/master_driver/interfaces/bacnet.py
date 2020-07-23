@@ -51,12 +51,12 @@
 # under Contract DE-AC05-76RL01830
 
 
-from master_driver.interfaces import BaseInterface, BaseRegister
+from main_driver.interfaces import BaseInterface, BaseRegister
 import logging
 
 from datetime import datetime, timedelta
 
-from master_driver.driver_exceptions import DriverConfigError
+from main_driver.driver_exceptions import DriverConfigError
 from volttron.platform.vip.agent import errors
 from volttron.platform.jsonrpc import RemoteError
 

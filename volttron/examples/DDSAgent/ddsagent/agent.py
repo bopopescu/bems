@@ -46,7 +46,7 @@ from volttron.platform.agent import utils
 # as a subtree here. Hopefully this will
 # change in the future.
 import sys
-sys.path.insert(0, './ddsagent/rticonnextdds-connector-master')
+sys.path.insert(0, './ddsagent/rticonnextdds-connector-main')
 import rticonnextdds_connector as rti
 
 class DDSAgent(Agent):

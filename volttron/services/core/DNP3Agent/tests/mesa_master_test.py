@@ -32,27 +32,27 @@ import json
 from collections import OrderedDict
 
 from dnp3.points import DIRECT_OPERATE
-from dnp3_master import SOEHandler
-from mesa_master import MesaMaster
+from dnp3_main import SOEHandler
+from mesa_main import MesaMain
 from dnp3.mesa.functions import FunctionDefinitions
 from function_test import POINT_TYPE_TO_PYTHON_TYPE
 
 
-class MesaMasterTestException(Exception):
+class MesaMainTestException(Exception):
     pass
 
 
-class MesaMasterTest(MesaMaster):
+class MesaMainTest(MesaMain):
 
     def __init__(self, **kwargs):
-        MesaMaster.__init__(self, soe_handler=SOEHandler(), **kwargs)
+        MesaMain.__init__(self, soe_handler=SOEHandler(), **kwargs)
 
     def shutdown(self):
         """
-            Override MesaMaster shutdown
+            Override MesaMain shutdown
         """
-        self.master.Disable()
-        del self.master
+        self.main.Disable()
+        del self.main
         del self.channel
 
     def send_single_point(self, pdefs, point_name, point_value):
@@ -67,12 +67,12 @@ class MesaMasterTest(MesaMaster):
         """
         pdef = pdefs.point_named(point_name)
         if not pdef:
-            raise MesaMasterTestException("Point definition not found: {}".format(point_name))
+            raise MesaMainTestException("Point definition not found: {}".format(point_name))
         if not pdef.point_type:
-            raise MesaMasterTestException("Unrecognized point type: {}".format(pdef.point_type))
+            raise MesaMainTestException("Unrecognized point type: {}".format(pdef.point_type))
         if pdef.point_type in POINT_TYPE_TO_PYTHON_TYPE and \
                 type(point_value) not in POINT_TYPE_TO_PYTHON_TYPE[pdef.point_type]:
-            raise MesaMasterTestException("Invalid point value: {}".format(pdef.name))
+            raise MesaMainTestException("Invalid point value: {}".format(pdef.name))
         self.send_command(self.send_direct_operate_command, pdef, point_value)
 
     def send_point(self, pdefs, func_def_path, point_name, point_value, step_number):
@@ -87,14 +87,14 @@ class MesaMasterTest(MesaMaster):
         """
         pdef = pdefs.point_named(point_name)
         if not pdef:
-            raise MesaMasterTestException("Point definition not found: {}".format(point_name))
+            raise MesaMainTestException("Point definition not found: {}".format(point_name))
 
         if not pdef.point_type:
-            raise MesaMasterTestException("Unrecognized point type: {}".format(pdef.point_type))
+            raise MesaMainTestException("Unrecognized point type: {}".format(pdef.point_type))
 
         step_def = FunctionDefinitions(pdefs, func_def_path).step_definition_for_point(pdef)
         if step_number != step_def.step_number:
-            raise MesaMasterTestException("Step not in order: {}".format(step_number))
+            raise MesaMainTestException("Step not in order: {}".format(step_number))
 
         if type(point_value) == list:
             self.send_array(point_value, pdef)
@@ -103,11 +103,11 @@ class MesaMasterTest(MesaMaster):
             step_def = fdefs.step_definition_for_point(pdef)
             send_func = self.SEND_FUNCTIONS.get(step_def.fcodes[0] if step_def.fcodes else DIRECT_OPERATE, None)
             if not send_func:
-                raise MesaMasterTestException("Unrecognized function code")
+                raise MesaMainTestException("Unrecognized function code")
 
             if pdef.point_type in POINT_TYPE_TO_PYTHON_TYPE and \
                     type(point_value) not in POINT_TYPE_TO_PYTHON_TYPE[pdef.point_type]:
-                raise MesaMasterTestException("Invalid point value: {}".format(pdef.name))
+                raise MesaMainTestException("Invalid point value: {}".format(pdef.name))
 
             self.send_command(send_func, pdef, point_value)
 
@@ -131,10 +131,10 @@ class MesaMasterTest(MesaMaster):
 
 
 def main():
-    mesa_master_test = MesaMasterTest()
-    mesa_master_test.connect()
+    mesa_main_test = MesaMainTest()
+    mesa_main_test.connect()
     # Ad-hoc tests can be inserted here if desired.
-    mesa_master_test.shutdown()
+    mesa_main_test.shutdown()
 
 
 if __name__ == '__main__':

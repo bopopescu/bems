@@ -51,7 +51,7 @@ class DNP3Agent(BaseDNP3Agent):
     """
         DNP3Agent is a VOLTTRON agent that handles DNP3 outstation communications.
 
-        DNP3Agent models a DNP3 outstation, communicating with a DNP3 master.
+        DNP3Agent models a DNP3 outstation, communicating with a DNP3 main.
 
         For further information about this agent and DNP3 communications, please see the VOLTTRON
         DNP3 specification, located in VOLTTRON readthedocs
@@ -70,14 +70,14 @@ class DNP3Agent(BaseDNP3Agent):
         self.vip.config.subscribe(self._configure, actions=['NEW', 'UPDATE'], pattern='config')
 
     def _process_point_value(self, point_value):
-        """DNP3Agent publishes each point value to the message bus as the value is received from the master."""
+        """DNP3Agent publishes each point value to the message bus as the value is received from the main."""
         point_val = super(DNP3Agent, self)._process_point_value(point_value)
         if point_val:
             self.publish_point_value(point_value)
 
     @Core.receiver('onstart')
     def onstart(self, sender, **kwargs):
-        """Start the DNP3Outstation instance, kicking off communication with the DNP3 Master."""
+        """Start the DNP3Outstation instance, kicking off communication with the DNP3 Main."""
         super(DNP3Agent, self).onstart(sender, **kwargs)
 
 

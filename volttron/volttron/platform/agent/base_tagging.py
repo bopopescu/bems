@@ -130,7 +130,7 @@ class BaseTaggingService(Agent):
         """
         Called on start of agent
         Method to establish database connection, do any initial 
-        bootstrap necessary. Example - load master list of tags, units,
+        bootstrap necessary. Example - load main list of tags, units,
         categories etc. into data store/memory
         """
         pass

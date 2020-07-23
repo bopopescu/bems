@@ -61,7 +61,7 @@ class OverrideError(DriverInterfaceError):
     """Error raised when the user tries to set/revert point when global override is set."""
     pass
 
-def master_driver_agent(config_path, **kwargs):
+def main_driver_agent(config_path, **kwargs):
 
     config = utils.load_config(config_path)
 
@@ -105,8 +105,8 @@ def master_driver_agent(config_path, **kwargs):
     driver_scrape_interval = get_config('driver_scrape_interval', 0.02)
 
     if config.get("driver_config_list") is not None:
-        _log.warning("Master driver configured with old setting. This is no longer supported.")
-        _log.warning('Use the script "scripts/update_master_driver_config.py" to convert the configuration.')
+        _log.warning("Main driver configured with old setting. This is no longer supported.")
+        _log.warning('Use the script "scripts/update_main_driver_config.py" to convert the configuration.')
 
     publish_depth_first_all = bool(get_config("publish_depth_first_all", True))
     publish_breadth_first_all = bool(get_config("publish_breadth_first_all", False))
@@ -115,7 +115,7 @@ def master_driver_agent(config_path, **kwargs):
 
     group_offset_interval = get_config("group_offset_interval", 0.0)
 
-    return MasterDriverAgent(driver_config_list, scalability_test,
+    return MainDriverAgent(driver_config_list, scalability_test,
                              scalability_test_iterations,
                              driver_scrape_interval,
                              group_offset_interval,
@@ -128,7 +128,7 @@ def master_driver_agent(config_path, **kwargs):
                              publish_breadth_first,
                              heartbeat_autostart=True, **kwargs)
 
-class MasterDriverAgent(Agent):
+class MainDriverAgent(Agent):
     def __init__(self, driver_config_list, scalability_test = False,
                  scalability_test_iterations = 3,
                  driver_scrape_interval = 0.02,
@@ -141,7 +141,7 @@ class MasterDriverAgent(Agent):
                  publish_depth_first=False,
                  publish_breadth_first=False,
                  **kwargs):
-        super(MasterDriverAgent, self).__init__(**kwargs)
+        super(MainDriverAgent, self).__init__(**kwargs)
         self.instances = {}
         self.scalability_test = scalability_test
         self.scalability_test_iterations = scalability_test_iterations
@@ -239,15 +239,15 @@ class MasterDriverAgent(Agent):
 
         else:
             if self.max_open_sockets != config["max_open_sockets"]:
-                _log.info("The master driver must be restarted for changes to the max_open_sockets setting to take effect")
+                _log.info("The main driver must be restarted for changes to the max_open_sockets setting to take effect")
 
             if self.max_concurrent_publishes != config["max_concurrent_publishes"]:
-                _log.info("The master driver must be restarted for changes to the max_concurrent_publishes setting to take effect")
+                _log.info("The main driver must be restarted for changes to the max_concurrent_publishes setting to take effect")
 
             if self.scalability_test != bool(config["scalability_test"]):
                 if not self.scalability_test:
                     _log.info(
-                        "The master driver must be restarted with scalability_test set to true in order to run a test.")
+                        "The main driver must be restarted with scalability_test set to true in order to run a test.")
                 if self.scalability_test:
                     _log.info(
                         "A scalability test may not be interrupted. Restarting the driver is required to stop the test.")
@@ -289,14 +289,14 @@ class MasterDriverAgent(Agent):
             driver_scrape_interval = float(config["driver_scrape_interval"])
         except ValueError as e:
             _log.error("ERROR PROCESSING CONFIGURATION: {}".format(e))
-            _log.error("Master driver scrape interval settings unchanged")
+            _log.error("Main driver scrape interval settings unchanged")
             # TODO: set a health status for the agent
 
         try:
             group_offset_interval = float(config["group_offset_interval"])
         except ValueError as e:
             _log.error("ERROR PROCESSING CONFIGURATION: {}".format(e))
-            _log.error("Master driver group interval settings unchanged")
+            _log.error("Main driver group interval settings unchanged")
             # TODO: set a health status for the agent
 
         if self.scalability_test and action == "UPDATE":
@@ -778,7 +778,7 @@ class MasterDriverAgent(Agent):
 
 def main(argv=sys.argv):
     """Main method called to start the agent."""
-    utils.vip_main(master_driver_agent, identity=PLATFORM_DRIVER,
+    utils.vip_main(main_driver_agent, identity=PLATFORM_DRIVER,
                    version=__version__)
 
 

@@ -53,7 +53,7 @@
 # }}}
 
 from __future__ import print_function
-from master_driver.interfaces.modbus_tk.helpers import str2bool
+from main_driver.interfaces.modbus_tk.helpers import str2bool
 
 import cmd
 import yaml
@@ -604,7 +604,7 @@ class ConfigCmd (cmd.Cmd):
                                           "device_type": "watts_on",
                                           "device_address": "/dev/tty.usbserial-AL00IEEY",
                                           "port": 0,
-                                          "slave_id": 2,
+                                          "subordinate_id": 2,
                                           "baudrate": 115200,
                                           "bytesize": 8,
                                           "parity": "none",
@@ -718,11 +718,11 @@ class ConfigCmd (cmd.Cmd):
 
             # RTU transport
             if not port:
-                print('Enter slave id (default to 1): ', end='')
+                print('Enter subordinate id (default to 1): ', end='')
                 try:
-                    slave_id = int(raw_input())
+                    subordinate_id = int(raw_input())
                 except ValueError:
-                    slave_id = 1
+                    subordinate_id = 1
 
                 print('Enter baudrate (default to 9600): ', end='')
                 try:
@@ -754,7 +754,7 @@ class ConfigCmd (cmd.Cmd):
                     xonxoff = 0
 
                 driver_config['driver_config'].update({
-                    "slave_id": slave_id,
+                    "subordinate_id": subordinate_id,
                     "baudrate": baudrate,
                     "bytesize": bytesize,
                     "parity": parity,

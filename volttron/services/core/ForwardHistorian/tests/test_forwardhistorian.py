@@ -493,7 +493,7 @@ def test_old_config(volttron_instances, forwarder):
 #     print("\n** test_actuator_topic **")
 #     global volttron_instance1, volttron_instance2
 #
-#     # Create master driver config and 4 fake devices each with 6 points
+#     # Create main driver config and 4 fake devices each with 6 points
 #     process = Popen(['python', 'config_builder.py', '--count=1',
 #                      '--publish-only-depth-all',
 #                      'fake', 'fake_unit_testing.csv', 'null'],
@@ -504,17 +504,17 @@ def test_old_config(volttron_instances, forwarder):
 #     print(result)
 #     assert result == 0
 #
-#     # Start the master driver agent which would intern start the fake driver
+#     # Start the main driver agent which would intern start the fake driver
 #     # using the configs created above
-#     master_uuid = volttron_instance1.install_agent(
-#         agent_dir="services/core/MasterDriverAgent",
+#     main_uuid = volttron_instance1.install_agent(
+#         agent_dir="services/core/MainDriverAgent",
 #         config_file="scripts/scalability-testing/configs/config",
 #         start=True)
-#     print("agent id: ", master_uuid)
+#     print("agent id: ", main_uuid)
 #     gevent.sleep(2)  # wait for the agent to start and start the devices
 #
 #     # Start the actuator agent through which publish agent should communicate
-#     # to fake device. Start the master driver agent which would intern start
+#     # to fake device. Start the main driver agent which would intern start
 #     # the fake driver using the configs created above
 #     actuator_uuid = volttron_instance1.install_agent(
 #         agent_dir="services/core/ActuatorAgent",
@@ -568,8 +568,8 @@ def test_old_config(volttron_instances, forwarder):
 #         assert result_header['requesterID'] in ['test-agent', 'pubsub.compat']
 #         assert result_message['result'] == 'SUCCESS'
 #     finally:
-#         volttron_instance1.stop_agent(master_uuid)
-#         volttron_instance1.remove_agent(master_uuid)
+#         volttron_instance1.stop_agent(main_uuid)
+#         volttron_instance1.remove_agent(main_uuid)
 #         volttron_instance1.stop_agent(actuator_uuid)
 #         volttron_instance1.remove_agent(actuator_uuid)
 #         volttron_instance2.stop_agent(listener_uuid)

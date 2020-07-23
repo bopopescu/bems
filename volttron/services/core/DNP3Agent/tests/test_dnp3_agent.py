@@ -41,7 +41,7 @@ from volttron.platform import get_services_core
 from volttron.platform.agent.utils import strip_comments
 
 from dnp3.points import PointDefinitions
-from mesa_master_test import MesaMasterTest
+from mesa_main_test import MesaMainTest
 
 from pydnp3 import asiodnp3, asiopal, opendnp3, openpal
 
@@ -150,17 +150,17 @@ def agent(request, volttron_instance):
 
 
 @pytest.fixture(scope="module")
-def run_master(request):
-    """Run Mesa master application."""
-    master = MesaMasterTest(local_ip=AGENT_CONFIG['local_ip'], port=AGENT_CONFIG['port'])
-    master.connect()
+def run_main(request):
+    """Run Mesa main application."""
+    main = MesaMainTest(local_ip=AGENT_CONFIG['local_ip'], port=AGENT_CONFIG['port'])
+    main.connect()
 
     def stop():
-        master.shutdown()
+        main.shutdown()
 
     request.addfinalizer(stop)
 
-    return master
+    return main
 
 
 @pytest.fixture(scope="function")
@@ -193,7 +193,7 @@ class TestDNP3Agent:
     def set_point(agent, point_name, value):
         """Use DNP3Agent to set a point value for a DNP3 resource."""
         response = agent.vip.rpc.call(DNP3_AGENT_ID, 'set_point', point_name, value).get(timeout=10)
-        gevent.sleep(1)     # Give the Master time to receive an echoed point value back from the Outstation.
+        gevent.sleep(1)     # Give the Main time to receive an echoed point value back from the Outstation.
         return response
 
     @staticmethod
@@ -202,28 +202,28 @@ class TestDNP3Agent:
         return agent.vip.rpc.call(DNP3_AGENT_ID, 'set_points', point_dict).get(timeout=10)
 
     @staticmethod
-    def send_single_point(master, point_name, point_value):
+    def send_single_point(main, point_name, point_value):
         """
-            Send a point name and value from the Master to DNP3Agent.
+            Send a point name and value from the Main to DNP3Agent.
 
             Return a dictionary with an exception key and error, empty if successful.
         """
         try:
-            master.send_single_point(pdefs, point_name, point_value)
+            main.send_single_point(pdefs, point_name, point_value)
             return {}
         except Exception as err:
             exception = {'key': type(err).__name__, 'error': str(err)}
-            print("Exception sending point from master: {}".format(exception))
+            print("Exception sending point from main: {}".format(exception))
             return exception
 
     @staticmethod
-    def get_value_from_master(master, point_name):
-        """Get value of the point from master after being set by test agent."""
+    def get_value_from_main(main, point_name):
+        """Get value of the point from main after being set by test agent."""
         try:
             pdef = pdefs.point_named(point_name)
             group = input_group_map[pdef.group]
             index = pdef.index
-            return master.soe_handler.result[group][index]
+            return main.soe_handler.result[group][index]
         except KeyError:
             return None
 
@@ -240,17 +240,17 @@ class TestDNP3Agent:
         return messages[POINT_TOPIC].get('message', {})
 
     # **********
-    # ********** OUTPUT TESTS (send data from Master to Agent to ControlAgent) ************
+    # ********** OUTPUT TESTS (send data from Main to Agent to ControlAgent) ************
     # **********
 
-    def test_get_point_definition(self, run_master, agent, reset):
+    def test_get_point_definition(self, run_main, agent, reset):
         """Ask the agent whether it has a point definition for a point name."""
         self.get_point_definition(agent, TEST_GET_POINT_NAME)
 
-    def test_send_point(self, run_master, agent, reset):
-        """Send a point from the master and get its value from DNP3Agent."""
+    def test_send_point(self, run_main, agent, reset):
+        """Send a point from the main and get its value from DNP3Agent."""
         self.get_point_definition(agent, TEST_GET_POINT_NAME)
-        exceptions = self.send_single_point(run_master, TEST_GET_POINT_NAME, 45)
+        exceptions = self.send_single_point(run_main, TEST_GET_POINT_NAME, 45)
         assert exceptions == {}
         received_point = self.get_point(agent, TEST_GET_POINT_NAME)
         assert exceptions == {}
@@ -259,11 +259,11 @@ class TestDNP3Agent:
         dict_compare({TEST_GET_POINT_NAME: 45}, self.subscribed_points())
 
     # **********
-    # ********** INPUT TESTS (send data from ControlAgent to Agent to Master) ************
+    # ********** INPUT TESTS (send data from ControlAgent to Agent to Main) ************
     # **********
 
-    def test_set_point(self, run_master, agent, reset):
+    def test_set_point(self, run_main, agent, reset):
         """Test set an input point and confirm getting the same value for that point."""
         self.set_point(agent, TEST_SET_POINT_NAME, 45)
-        received_val = self.get_value_from_master(run_master, TEST_SET_POINT_NAME)
+        received_val = self.get_value_from_main(run_main, TEST_SET_POINT_NAME)
         assert received_val == 45, "Expected {} = {}, got {}".format(TEST_SET_POINT_NAME, 45, received_val)

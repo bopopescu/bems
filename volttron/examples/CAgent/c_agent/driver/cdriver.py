@@ -54,16 +54,16 @@ under Contract DE-AC05-76RL01830
 __docformat__ = 'reStructuredText'
 
 """The cdriver is an example implementation of an interface that
-allows the master driver to transparently call C code.
+allows the main driver to transparently call C code.
 This file is an `interface` and will only be usable in the
-master_driver/interfaces directory. The shared object will
+main_driver/interfaces directory. The shared object will
 need to be somewhere it can be found by this file.
 """
 
 from StringIO import StringIO
 from csv import DictReader
 
-from master_driver.interfaces import BasicRevert, BaseInterface, BaseRegister
+from main_driver.interfaces import BasicRevert, BaseInterface, BaseRegister
 
 from ctypes import *
 

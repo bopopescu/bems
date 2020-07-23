@@ -55,7 +55,7 @@
     Modbus client wrapper.
 
     The Client class provides a higher level interface to the modbus_tk library.  The Client represents
-    a "Modbus Master" and communicates with a "Modbus Slave" over TCP or Serial/RS-485.
+    a "Modbus Main" and communicates with a "Modbus Subordinate" over TCP or Serial/RS-485.
 
     The Client is intended to be subclassed and extended with one or more Field instances that
     represent the modbus register map.  Subclasses may be created programmatically or loaded
@@ -63,7 +63,7 @@
 
     A Client subclass is created programmatically like this:
 
-        class MyModbusMaster (Client):
+        class MyModbusMain (Client):
             register_1 = Field(...)
             register_2 = Field(...)
             ...etc...
@@ -112,11 +112,11 @@ class Field(object):
 
         myModbusClientInstance.float_field_1 = 3.14159
         ...
-        myModbusClientInstance.write_all()    # Writes all modified fields to the modbus slave.
+        myModbusClientInstance.write_all()    # Writes all modified fields to the modbus subordinate.
 
         Getting the value is simpler:
 
-        myModbusClientInstance.float_field_1  #Reads from cache or from modbus slave.
+        myModbusClientInstance.float_field_1  #Reads from cache or from modbus subordinate.
 
     """
 
@@ -510,7 +510,7 @@ class Request (object):
         These requests are used for both reading and writing.
 
         :param fields: List of fields sorted by address.
-        :param byte_order: Byte order of the modbus slave.
+        :param byte_order: Byte order of the modbus subordinate.
         :return: List of Requests
         """
         requests = list()
@@ -540,8 +540,8 @@ class Request (object):
 class Client (object):
 
     """
-    Generic modbus master.  It functions as a traditional "client" making requests of
-    a modbus slave which acts like a traditional "server".
+    Generic modbus main.  It functions as a traditional "client" making requests of
+    a modbus subordinate which acts like a traditional "server".
 
     Subclass this class with Field class variables.  See module description above.
     """
@@ -572,16 +572,16 @@ class Client (object):
 
     def __init__(self, *args, **kwargs):
         """
-            Sets up the Modbus Master to communicate with a slave.  Supports ModbusTCP and ModbusRTU depending
+            Sets up the Modbus Main to communicate with a subordinate.  Supports ModbusTCP and ModbusRTU depending
             on the values provided in device_address and port.  If port == None, ModbusRTU is used.
 
         :param device_address:  IP address if using ModbusTCP, a device id (eg /dev/ttyAMA0) if using ModbusRTU
         :param port: Port number for ModbusTCP, None if using ModbusRTU
-        :param slave_address: Unique ID of the Modbus slave.
+        :param subordinate_address: Unique ID of the Modbus subordinate.
         :param baud: Baud rate for ModbusRTU.
-        :param latency: Controls the cache refresh rate.  Max age of data values read from slave.
+        :param latency: Controls the cache refresh rate.  Max age of data values read from subordinate.
         :param ignore_op_mode: Turns read/write error checking off or on.  Deprecated.
-        :param timeout_in_sec: Time to wait for a response from the slave.
+        :param timeout_in_sec: Time to wait for a response from the subordinate.
         :param verbose:
         :param write_single_values: Write registers or coils one value at a time (WRITE_SINGLE_REGISTER, etc.).
         :return:
@@ -592,11 +592,11 @@ class Client (object):
         # Support for legacy usage where device_address, port are passed in constructor.
         device_address = None if len(args) == 0 else args[0]
         port = None if len(args) < 2 or args[1] is None else int(args[1])
-        self.slave_address = None if len(args) < 3 or args[2] is None else int(args[2])
+        self.subordinate_address = None if len(args) < 3 or args[2] is None else int(args[2])
 
         # Optional keyword arguments
-        if self.slave_address is None:
-            self.slave_address = kwargs.pop('slave_address', 1)
+        if self.subordinate_address is None:
+            self.subordinate_address = kwargs.pop('subordinate_address', 1)
         self.latency = kwargs.pop('latency', 1000)
         self._ignore_op_mode = kwargs.pop('ignore_op_mode', False)  # Protection against unintended writes
 
@@ -612,9 +612,9 @@ class Client (object):
 
         if device_address:
             if port is not None:
-                self.client = modbus_tcp.TcpMaster(host=device_address, port=port, timeout_in_sec=timeout_in_sec)
+                self.client = modbus_tcp.TcpMain(host=device_address, port=port, timeout_in_sec=timeout_in_sec)
             else:
-                self.client = modbus_rtu.RtuMaster(
+                self.client = modbus_rtu.RtuMain(
                     serial.Serial(device_address,
                                   baudrate=baud,
                                   bytesize=bytesize,
@@ -630,11 +630,11 @@ class Client (object):
         self._error_count = 0
 
     def set_transport_tcp(self, hostname, port, timeout_in_sec=1.0):
-        self.client = modbus_tcp.TcpMaster(host=hostname, port=int(port), timeout_in_sec=timeout_in_sec)
+        self.client = modbus_tcp.TcpMain(host=hostname, port=int(port), timeout_in_sec=timeout_in_sec)
         return self
 
     def set_transport_rtu(self, device, baudrate, bytesize, parity, stopbits, xonxoff):
-        self.client = modbus_rtu.RtuMaster(
+        self.client = modbus_rtu.RtuMain(
             serial.Serial(device,
                           baudrate=baudrate, bytesize=bytesize, parity=parity, stopbits=stopbits, xonxoff=xonxoff,
                           rtscts=False, writeTimeout=None, dsrdtr=False, interCharTimeout=None)
@@ -682,7 +682,7 @@ class Client (object):
         logger.debug("Requesting: %s", request)
         try:
             results = self.client.execute(
-                self.slave_address,
+                self.subordinate_address,
                 request.read_function_code,
                 request.address,
                 quantity_of_x=request.count,
@@ -722,7 +722,7 @@ class Client (object):
                     values.append(value)
                 logger.debug("Writing modbus data for field %s: %s", f.name, values)
                 self.client.execute(
-                    self.slave_address,
+                    self.subordinate_address,
                     f.single_write_function_code,
                     f.address,
                     quantity_of_x=len(values),
@@ -744,7 +744,7 @@ class Client (object):
                 if r.write_function_code == modbus_constants.WRITE_SINGLE_COIL:
                     values = values[0]
                 self.client.execute(
-                    self.slave_address,
+                    self.subordinate_address,
                     r.write_function_code,
                     r.address,
                     quantity_of_x=r.count,

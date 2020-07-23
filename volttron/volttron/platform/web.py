@@ -171,7 +171,7 @@ def is_ip_private(vip_address):
 class WebResponse(object):
     """ The WebResponse object is a serializable representation of
     a response to an http(s) client request that can be transmitted
-    through the RPC subsystem to the appropriate platform's MasterWebAgent
+    through the RPC subsystem to the appropriate platform's MainWebAgent
     """
 
     def __init__(self, status, data, headers):
@@ -241,8 +241,8 @@ class WebApplicationWrapper(object):
     with it.  The class provides a contianer for managing the routing of
     websocket, static content, and rpc function calls.
     """
-    def __init__(self, masterweb, host, port):
-        self.masterweb = masterweb
+    def __init__(self, mainweb, host, port):
+        self.mainweb = mainweb
         self.port = port
         self.host = host
         self.ws = WebSocketWSGIApplication(handler_cls=VolttronWebSocket)
@@ -263,7 +263,7 @@ class WebApplicationWrapper(object):
     def client_opened(self, client, endpoint, identity):
 
         ip = client.environ['REMOTE_ADDR']
-        should_open = self.masterweb.vip.rpc.call(identity, 'client.opened',
+        should_open = self.mainweb.vip.rpc.call(identity, 'client.opened',
                                                   ip, endpoint)
         if not should_open:
             self._log.error("Authentication failure, closing websocket.")
@@ -285,7 +285,7 @@ class WebApplicationWrapper(object):
     def client_received(self, endpoint, message):
         clients = self.endpoint_clients.get(endpoint, [])
         for identity, _ in clients:
-            self.masterweb.vip.rpc.call(identity, 'client.message',
+            self.mainweb.vip.rpc.call(identity, 'client.message',
                                         str(endpoint), str(message))
 
     def client_closed(self, client, endpoint, identity,
@@ -299,12 +299,12 @@ class WebApplicationWrapper(object):
         except KeyError:
             pass
         else:
-            self.masterweb.vip.rpc.call(identity, 'client.closed', endpoint)
+            self.mainweb.vip.rpc.call(identity, 'client.closed', endpoint)
 
     def create_ws_endpoint(self, endpoint, identity):
         #_log.debug()print(endpoint, identity)
         # if endpoint in self.endpoint_clients:
-        #     peers = self.masterweb.vip.peerlist.get()
+        #     peers = self.mainweb.vip.peerlist.get()
         #     old_identity = self._wsregistry[endpoint]
         #     if old_identity not in peers:
         #         for client in self.endpoint_clients.values():
@@ -350,10 +350,10 @@ class WebApplicationWrapper(object):
             environ['identity'] = self._wsregistry[environ['PATH_INFO']]
             return self.ws(environ, start_response)
 
-        return self.masterweb.app_routing(environ, start_response)
+        return self.mainweb.app_routing(environ, start_response)
 
 
-class MasterWebService(Agent):
+class MainWebService(Agent):
     """The service that is responsible for managing and serving registered pages
 
     Agents can register either a directory of files to serve or an rpc method
@@ -366,7 +366,7 @@ class MasterWebService(Agent):
 
         serverkey is the public key in order to access this volttron's bus.
         """
-        super(MasterWebService, self).__init__(identity, address, **kwargs)
+        super(MainWebService, self).__init__(identity, address, **kwargs)
 
         self.bind_web_address = bind_web_address
         self.serverkey = serverkey

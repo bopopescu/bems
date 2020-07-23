@@ -35,7 +35,7 @@ from pydnp3 import opendnp3
 from dnp3.points import DIRECT_OPERATE, SELECT, OPERATE
 from dnp3.points import POINT_TYPE_ANALOG_OUTPUT, POINT_TYPE_BINARY_OUTPUT
 from dnp3.points import PointDefinitions
-from dnp3_master import DNP3Master
+from dnp3_main import DNP3Main
 from function_test import FunctionTest
 
 POINT_DEF_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), 'tests', 'data', 'mesa_points.config'))
@@ -52,14 +52,14 @@ POINT_TYPE_TO_PYTHON_TYPE = {
 }
 
 
-class MesaMasterException(Exception):
+class MesaMainException(Exception):
     pass
 
 
-class MesaMaster(DNP3Master):
+class MesaMain(DNP3Main):
 
     def __init__(self, **kwargs):
-        DNP3Master.__init__(self, **kwargs)
+        DNP3Main.__init__(self, **kwargs)
 
         self.SEND_FUNCTIONS = {
             DIRECT_OPERATE: self.send_direct_operate_command,
@@ -85,7 +85,7 @@ class MesaMaster(DNP3Master):
             send_func(OUTPUT_TYPES[value_type](point_value), index or pdef.index)
             time.sleep(0.2)
         except KeyError:
-            raise MesaMasterException("Unrecognized output type: {}".format(value_type))
+            raise MesaMainException("Unrecognized output type: {}".format(value_type))
 
     def send_array(self, json_array, pdef):
         """
@@ -124,7 +124,7 @@ class MesaMaster(DNP3Master):
 
             pdef = pdefs.point_named(func_step_def.name)  # No need to test for valid point name, as that was done above
             if not pdef:
-                raise MesaMasterException("Point definition not found: {}".format(func_step_def.name))
+                raise MesaMainException("Point definition not found: {}".format(func_step_def.name))
 
             if type(point_value) == list:
                 self.send_array(point_value, pdef)
@@ -132,16 +132,16 @@ class MesaMaster(DNP3Master):
                 try:
                     send_func = self.SEND_FUNCTIONS[func_step_def.fcodes[0] if func_step_def.fcodes else DIRECT_OPERATE]
                 except (KeyError, IndexError):
-                    raise MesaMasterException("Unrecognized sent command function")
+                    raise MesaMainException("Unrecognized sent command function")
 
                 self.send_command(send_func, pdef, point_value)
 
 
 def main():
-    mesa_master = MesaMaster()
-    mesa_master.connect()
+    mesa_main = MesaMain()
+    mesa_main.connect()
     # Ad-hoc tests can be inserted here if desired.
-    mesa_master.shutdown()
+    mesa_main.shutdown()
 
 
 if __name__ == '__main__':
